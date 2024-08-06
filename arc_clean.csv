@@ -1,0 +1,424 @@
+FIPS,county,state,abb
+ 01007,Bibb,Alabama,AL
+ 01009,Blount,Alabama,AL
+ 01015,Calhoun,Alabama,AL
+ 01017,Chambers,Alabama,AL
+ 01019,Cherokee,Alabama,AL
+ 01021,Chilton,Alabama,AL
+ 01027,Clay,Alabama,AL
+ 01029,Cleburne,Alabama,AL
+ 01033,Colbert,Alabama,AL
+ 01037,Coosa,Alabama,AL
+ 01043,Cullman,Alabama,AL
+ 01049,DeKalb,Alabama,AL
+ 01051,Elmore,Alabama,AL
+ 01055,Etowah,Alabama,AL
+ 01057,Fayette,Alabama,AL
+ 01059,Franklin,Alabama,AL
+ 01065,Hale,Alabama,AL
+ 01071,Jackson,Alabama,AL
+ 01073,Jefferson,Alabama,AL
+ 01075,Lamar,Alabama,AL
+ 01077,Lauderdale,Alabama,AL
+ 01079,Lawrence,Alabama,AL
+ 01083,Limestone,Alabama,AL
+ 01087,Macon,Alabama,AL
+ 01089,Madison,Alabama,AL
+ 01093,Marion,Alabama,AL
+ 01095,Marshall,Alabama,AL
+ 01103,Morgan,Alabama,AL
+ 01107,Pickens,Alabama,AL
+ 01111,Randolph,Alabama,AL
+ 01117,Shelby,Alabama,AL
+ 01115,St. Clair,Alabama,AL
+ 01121,Talladega,Alabama,AL
+ 01123,Tallapoosa,Alabama,AL
+ 01125,Tuscaloosa,Alabama,AL
+ 01127,Walker,Alabama,AL
+ 01133,Winston,Alabama,AL
+ 13011,Banks,Georgia,GA
+ 13013,Barrow,Georgia,GA
+ 13015,Bartow,Georgia,GA
+ 13045,Carroll,Georgia,GA
+ 13047,Catoosa,Georgia,GA
+ 13055,Chattooga,Georgia,GA
+ 13057,Cherokee,Georgia,GA
+ 13083,Dade,Georgia,GA
+ 13085,Dawson,Georgia,GA
+ 13097,Douglas,Georgia,GA
+ 13105,Elbert,Georgia,GA
+ 13111,Fannin,Georgia,GA
+ 13115,Floyd,Georgia,GA
+ 13117,Forsyth,Georgia,GA
+ 13119,Franklin,Georgia,GA
+ 13123,Gilmer,Georgia,GA
+ 13129,Gordon,Georgia,GA
+ 13135,Gwinnett,Georgia,GA
+ 13137,Habersham,Georgia,GA
+ 13139,Hall,Georgia,GA
+ 13143,Haralson,Georgia,GA
+ 13147,Hart,Georgia,GA
+ 13149,Heard,Georgia,GA
+ 13157,Jackson,Georgia,GA
+ 13187,Lumpkin,Georgia,GA
+ 13195,Madison,Georgia,GA
+ 13213,Murray,Georgia,GA
+ 13223,Paulding,Georgia,GA
+ 13227,Pickens,Georgia,GA
+ 13233,Polk,Georgia,GA
+ 13241,Rabun,Georgia,GA
+ 13257,Stephens,Georgia,GA
+ 13281,Towns,Georgia,GA
+ 13291,Union,Georgia,GA
+ 13295,Walker,Georgia,GA
+ 13311,White,Georgia,GA
+ 13313,Whitfield,Georgia,GA
+ 21001,Adair,Kentucky,KY
+ 21011,Bath,Kentucky,KY
+ 21013,Bell,Kentucky,KY
+ 21019,Boyd,Kentucky,KY
+ 21025,Breathitt,Kentucky,KY
+ 21043,Carter,Kentucky,KY
+ 21045,Casey,Kentucky,KY
+ 21049,Clark,Kentucky,KY
+ 21051,Clay,Kentucky,KY
+ 21053,Clinton,Kentucky,KY
+ 21057,Cumberland,Kentucky,KY
+ 21061,Edmonson,Kentucky,KY
+ 21063,Elliott,Kentucky,KY
+ 21065,Estill,Kentucky,KY
+ 21069,Fleming,Kentucky,KY
+ 21071,Floyd,Kentucky,KY
+ 21079,Garrard,Kentucky,KY
+ 21087,Green,Kentucky,KY
+ 21089,Greenup,Kentucky,KY
+ 21095,Harlan,Kentucky,KY
+ 21099,Hart,Kentucky,KY
+ 21109,Jackson,Kentucky,KY
+ 21115,Johnson,Kentucky,KY
+ 21119,Knott,Kentucky,KY
+ 21121,Knox,Kentucky,KY
+ 21125,Laurel,Kentucky,KY
+ 21127,Lawrence,Kentucky,KY
+ 21129,Lee,Kentucky,KY
+ 21131,Leslie,Kentucky,KY
+ 21133,Letcher,Kentucky,KY
+ 21135,Lewis,Kentucky,KY
+ 21137,Lincoln,Kentucky,KY
+ 21151,Madison,Kentucky,KY
+ 21153,Magoffin,Kentucky,KY
+ 21159,Martin,Kentucky,KY
+ 21147,McCreary,Kentucky,KY
+ 21165,Menifee,Kentucky,KY
+ 21169,Metcalfe,Kentucky,KY
+ 21171,Monroe,Kentucky,KY
+ 21173,Montgomery,Kentucky,KY
+ 21175,Morgan,Kentucky,KY
+ 21181,Nicholas,Kentucky,KY
+ 21189,Owsley,Kentucky,KY
+ 21193,Perry,Kentucky,KY
+ 21195,Pike,Kentucky,KY
+ 21197,Powell,Kentucky,KY
+ 21199,Pulaski,Kentucky,KY
+ 21201,Robertson,Kentucky,KY
+ 21203,Rockcastle,Kentucky,KY
+ 21205,Rowan,Kentucky,KY
+ 21207,Russell,Kentucky,KY
+ 21231,Wayne,Kentucky,KY
+ 21235,Whitley,Kentucky,KY
+ 21237,Wolfe,Kentucky,KY
+ 24001,Allegany,Maryland,MD
+ 24023,Garrett,Maryland,MD
+ 24043,Washington,Maryland,MD
+ 28003,Alcorn,Mississippi,MS
+ 28009,Benton,Mississippi,MS
+ 28013,Calhoun,Mississippi,MS
+ 28017,Chickasaw,Mississippi,MS
+ 28019,Choctaw,Mississippi,MS
+ 28025,Clay,Mississippi,MS
+ 28057,Itawamba,Mississippi,MS
+ 28069,Kemper,Mississippi,MS
+ 28081,Lee,Mississippi,MS
+ 28087,Lowndes,Mississippi,MS
+ 28093,Marshall,Mississippi,MS
+ 28095,Monroe,Mississippi,MS
+ 28097,Montgomery,Mississippi,MS
+ 28103,Noxubee,Mississippi,MS
+ 28105,Oktibbeha,Mississippi,MS
+ 28107,Panola,Mississippi,MS
+ 28115,Pontotoc,Mississippi,MS
+ 28117,Prentiss,Mississippi,MS
+ 28139,Tippah,Mississippi,MS
+ 28141,Tishomingo,Mississippi,MS
+ 28145,Union,Mississippi,MS
+ 28155,Webster,Mississippi,MS
+ 28159,Winston,Mississippi,MS
+ 28161,Yalobusha,Mississippi,MS
+ 36003,Allegany,New York,NY
+ 36007,Broome,New York,NY
+ 36009,Cattaraugus,New York,NY
+ 36013,Chautauqua,New York,NY
+ 36015,Chemung,New York,NY
+ 36017,Chenango,New York,NY
+ 36023,Cortland,New York,NY
+ 36025,Delaware,New York,NY
+ 36077,Otsego,New York,NY
+ 36095,Schoharie,New York,NY
+ 36097,Schuyler,New York,NY
+ 36101,Steuben,New York,NY
+ 36107,Tioga,New York,NY
+ 36109,Tompkins,New York,NY
+ 37003,Alexander,North Carolina,NC
+ 37005,Alleghany,North Carolina,NC
+ 37009,Ashe,North Carolina,NC
+ 37011,Avery,North Carolina,NC
+ 37021,Buncombe,North Carolina,NC
+ 37023,Burke,North Carolina,NC
+ 37027,Caldwell,North Carolina,NC
+ 37035,Catawba,North Carolina,NC
+ 37039,Cherokee,North Carolina,NC
+ 37043,Clay,North Carolina,NC
+ 37045,Cleveland,North Carolina,NC
+ 37059,Davie,North Carolina,NC
+ 37067,Forsyth,North Carolina,NC
+ 37075,Graham,North Carolina,NC
+ 37087,Haywood,North Carolina,NC
+ 37089,Henderson,North Carolina,NC
+ 37099,Jackson,North Carolina,NC
+ 37113,Macon,North Carolina,NC
+ 37115,Madison,North Carolina,NC
+ 37111,McDowell,North Carolina,NC
+ 37121,Mitchell,North Carolina,NC
+ 37149,Polk,North Carolina,NC
+ 37161,Rutherford,North Carolina,NC
+ 37169,Stokes,North Carolina,NC
+ 37171,Surry,North Carolina,NC
+ 37173,Swain,North Carolina,NC
+ 37175,Transylvania,North Carolina,NC
+ 37189,Watauga,North Carolina,NC
+ 37193,Wilkes,North Carolina,NC
+ 37197,Yadkin,North Carolina,NC
+ 37199,Yancey,North Carolina,NC
+ 39001,Adams,Ohio,OH
+ 39007,Ashtabula,Ohio,OH
+ 39009,Athens,Ohio,OH
+ 39013,Belmont,Ohio,OH
+ 39015,Brown,Ohio,OH
+ 39019,Carroll,Ohio,OH
+ 39025,Clermont,Ohio,OH
+ 39029,Columbiana,Ohio,OH
+ 39031,Coshocton,Ohio,OH
+ 39053,Gallia,Ohio,OH
+ 39059,Guernsey,Ohio,OH
+ 39067,Harrison,Ohio,OH
+ 39071,Highland,Ohio,OH
+ 39073,Hocking,Ohio,OH
+ 39075,Holmes,Ohio,OH
+ 39079,Jackson,Ohio,OH
+ 39081,Jefferson,Ohio,OH
+ 39087,Lawrence,Ohio,OH
+ 39099,Mahoning,Ohio,OH
+ 39105,Meigs,Ohio,OH
+ 39111,Monroe,Ohio,OH
+ 39115,Morgan,Ohio,OH
+ 39119,Muskingum,Ohio,OH
+ 39121,Noble,Ohio,OH
+ 39127,Perry,Ohio,OH
+ 39131,Pike,Ohio,OH
+ 39141,Ross,Ohio,OH
+ 39145,Scioto,Ohio,OH
+ 39155,Trumbull,Ohio,OH
+ 39157,Tuscarawas,Ohio,OH
+ 39163,Vinton,Ohio,OH
+ 39167,Washington,Ohio,OH
+ 42003,Allegheny,Pennsylvania,PA
+ 42005,Armstrong,Pennsylvania,PA
+ 42007,Beaver,Pennsylvania,PA
+ 42009,Bedford,Pennsylvania,PA
+ 42013,Blair,Pennsylvania,PA
+ 42015,Bradford,Pennsylvania,PA
+ 42019,Butler,Pennsylvania,PA
+ 42021,Cambria,Pennsylvania,PA
+ 42023,Cameron,Pennsylvania,PA
+ 42025,Carbon,Pennsylvania,PA
+ 42027,Centre,Pennsylvania,PA
+ 42031,Clarion,Pennsylvania,PA
+ 42033,Clearfield,Pennsylvania,PA
+ 42035,Clinton,Pennsylvania,PA
+ 42037,Columbia,Pennsylvania,PA
+ 42039,Crawford,Pennsylvania,PA
+ 42047,Elk,Pennsylvania,PA
+ 42049,Erie,Pennsylvania,PA
+ 42051,Fayette,Pennsylvania,PA
+ 42053,Forest,Pennsylvania,PA
+ 42057,Fulton,Pennsylvania,PA
+ 42059,Greene,Pennsylvania,PA
+ 42061,Huntingdon,Pennsylvania,PA
+ 42063,Indiana,Pennsylvania,PA
+ 42065,Jefferson,Pennsylvania,PA
+ 42067,Juniata,Pennsylvania,PA
+ 42069,Lackawanna,Pennsylvania,PA
+ 42073,Lawrence,Pennsylvania,PA
+ 42079,Luzerne,Pennsylvania,PA
+ 42081,Lycoming,Pennsylvania,PA
+ 42083,McKean,Pennsylvania,PA
+ 42085,Mercer,Pennsylvania,PA
+ 42087,Mifflin,Pennsylvania,PA
+ 42089,Monroe,Pennsylvania,PA
+ 42093,Montour,Pennsylvania,PA
+ 42097,Northumberland,Pennsylvania,PA
+ 42099,Perry,Pennsylvania,PA
+ 42103,Pike,Pennsylvania,PA
+ 42105,Potter,Pennsylvania,PA
+ 42107,Schuylkill,Pennsylvania,PA
+ 42109,Snyder,Pennsylvania,PA
+ 42111,Somerset,Pennsylvania,PA
+ 42113,Sullivan,Pennsylvania,PA
+ 42115,Susquehanna,Pennsylvania,PA
+ 42117,Tioga,Pennsylvania,PA
+ 42119,Union,Pennsylvania,PA
+ 42121,Venango,Pennsylvania,PA
+ 42123,Warren,Pennsylvania,PA
+ 42125,Washington,Pennsylvania,PA
+ 42127,Wayne,Pennsylvania,PA
+ 42129,Westmoreland,Pennsylvania,PA
+ 42131,Wyoming,Pennsylvania,PA
+ 45007,Anderson,South Carolina,SC
+ 45021,Cherokee,South Carolina,SC
+ 45045,Greenville,South Carolina,SC
+ 45073,Oconee,South Carolina,SC
+ 45077,Pickens,South Carolina,SC
+ 45083,Spartanburg,South Carolina,SC
+ 45087,Union,South Carolina,SC
+ 47001,Anderson,Tennessee,TN
+ 47007,Bledsoe,Tennessee,TN
+ 47009,Blount,Tennessee,TN
+ 47011,Bradley,Tennessee,TN
+ 47013,Campbell,Tennessee,TN
+ 47015,Cannon,Tennessee,TN
+ 47019,Carter,Tennessee,TN
+ 47025,Claiborne,Tennessee,TN
+ 47027,Clay,Tennessee,TN
+ 47029,Cocke,Tennessee,TN
+ 47031,Coffee,Tennessee,TN
+ 47035,Cumberland,Tennessee,TN
+ 47041,DeKalb,Tennessee,TN
+ 47049,Fentress,Tennessee,TN
+ 47051,Franklin,Tennessee,TN
+ 47057,Grainger,Tennessee,TN
+ 47059,Greene,Tennessee,TN
+ 47061,Grundy,Tennessee,TN
+ 47063,Hamblen,Tennessee,TN
+ 47065,Hamilton,Tennessee,TN
+ 47067,Hancock,Tennessee,TN
+ 47073,Hawkins,Tennessee,TN
+ 47087,Jackson,Tennessee,TN
+ 47089,Jefferson,Tennessee,TN
+ 47091,Johnson,Tennessee,TN
+ 47093,Knox,Tennessee,TN
+ 47099,Lawrence,Tennessee,TN
+ 47101,Lewis,Tennessee,TN
+ 47105,Loudon,Tennessee,TN
+ 47111,Macon,Tennessee,TN
+ 47115,Marion,Tennessee,TN
+ 47107,McMinn,Tennessee,TN
+ 47121,Meigs,Tennessee,TN
+ 47123,Monroe,Tennessee,TN
+ 47129,Morgan,Tennessee,TN
+ 47133,Overton,Tennessee,TN
+ 47137,Pickett,Tennessee,TN
+ 47139,Polk,Tennessee,TN
+ 47141,Putnam,Tennessee,TN
+ 47143,Rhea,Tennessee,TN
+ 47145,Roane,Tennessee,TN
+ 47151,Scott,Tennessee,TN
+ 47153,Sequatchie,Tennessee,TN
+ 47155,Sevier,Tennessee,TN
+ 47159,Smith,Tennessee,TN
+ 47163,Sullivan,Tennessee,TN
+ 47171,Unicoi,Tennessee,TN
+ 47173,Union,Tennessee,TN
+ 47175,Van Buren,Tennessee,TN
+ 47177,Warren,Tennessee,TN
+ 47179,Washington,Tennessee,TN
+ 47185,White,Tennessee,TN
+ 51005,Alleghany,Virginia,VA
+ 51017,Bath,Virginia,VA
+ 51021,Bland,Virginia,VA
+ 51023,Botetourt,Virginia,VA
+ 51027,Buchanan,Virginia,VA
+ 51035,Carroll,Virginia,VA
+ 51045,Craig,Virginia,VA
+ 51051,Dickenson,Virginia,VA
+ 51063,Floyd,Virginia,VA
+ 51071,Giles,Virginia,VA
+ 51077,Grayson,Virginia,VA
+ 51089,Henry,Virginia,VA
+ 51091,Highland,Virginia,VA
+ 51105,Lee,Virginia,VA
+ 51121,Montgomery,Virginia,VA
+ 51141,Patrick,Virginia,VA
+ 51155,Pulaski,Virginia,VA
+ 51163,Rockbridge,Virginia,VA
+ 51167,Russell,Virginia,VA
+ 51169,Scott,Virginia,VA
+ 51173,Smyth,Virginia,VA
+ 51185,Tazewell,Virginia,VA
+ 51191,Washington,Virginia,VA
+ 51195,Wise,Virginia,VA
+ 51197,Wythe,Virginia,VA
+ 54001,Barbour,West Virginia,WV
+ 54003,Berkeley,West Virginia,WV
+ 54005,Boone,West Virginia,WV
+ 54007,Braxton,West Virginia,WV
+ 54009,Brooke,West Virginia,WV
+ 54011,Cabell,West Virginia,WV
+ 54013,Calhoun,West Virginia,WV
+ 54015,Clay,West Virginia,WV
+ 54017,Doddridge,West Virginia,WV
+ 54019,Fayette,West Virginia,WV
+ 54021,Gilmer,West Virginia,WV
+ 54023,Grant,West Virginia,WV
+ 54025,Greenbrier,West Virginia,WV
+ 54027,Hampshire,West Virginia,WV
+ 54029,Hancock,West Virginia,WV
+ 54031,Hardy,West Virginia,WV
+ 54033,Harrison,West Virginia,WV
+ 54035,Jackson,West Virginia,WV
+ 54037,Jefferson,West Virginia,WV
+ 54039,Kanawha,West Virginia,WV
+ 54041,Lewis,West Virginia,WV
+ 54043,Lincoln,West Virginia,WV
+ 54045,Logan,West Virginia,WV
+ 54049,Marion,West Virginia,WV
+ 54051,Marshall,West Virginia,WV
+ 54053,Mason,West Virginia,WV
+ 54047,McDowell,West Virginia,WV
+ 54055,Mercer,West Virginia,WV
+ 54057,Mineral,West Virginia,WV
+ 54059,Mingo,West Virginia,WV
+ 54061,Monongalia,West Virginia,WV
+ 54063,Monroe,West Virginia,WV
+ 54065,Morgan,West Virginia,WV
+ 54067,Nicholas,West Virginia,WV
+ 54069,Ohio,West Virginia,WV
+ 54071,Pendleton,West Virginia,WV
+ 54073,Pleasants,West Virginia,WV
+ 54075,Pocahontas,West Virginia,WV
+ 54077,Preston,West Virginia,WV
+ 54079,Putnam,West Virginia,WV
+ 54081,Raleigh,West Virginia,WV
+ 54083,Randolph,West Virginia,WV
+ 54085,Ritchie,West Virginia,WV
+ 54087,Roane,West Virginia,WV
+ 54089,Summers,West Virginia,WV
+ 54091,Taylor,West Virginia,WV
+ 54093,Tucker,West Virginia,WV
+ 54095,Tyler,West Virginia,WV
+ 54097,Upshur,West Virginia,WV
+ 54099,Wayne,West Virginia,WV
+ 54101,Webster,West Virginia,WV
+ 54103,Wetzel,West Virginia,WV
+ 54105,Wirt,West Virginia,WV
+ 54107,Wood,West Virginia,WV
+ 54109,Wyoming,West Virginia,WV
