@@ -1,8 +1,8 @@
 ## Economic Data 
 
 ### 1. Raw Data
-- BLS Raw Data (bls_county_XX) contains unemployment data from the Local Area Unemployment Statistics (LAUS) from the Bureau of Labor Statistics from 2018-2023. 
-- `census_poverty.xlsx` includes poverty rates from the Small Area Income and Poverty Estimates (SAIPE) from the US Census Bureau from 2018-2022.  
+- BLS Raw Data (bls_county_XX) contains unemployment data from the [Local Area Unemployment Statistics (LAUS)](https://www.bls.gov/lau/tables.htm) from the Bureau of Labor Statistics from 2018-2023. 
+- `census_poverty.xlsx` includes poverty rates from the [Small Area Income and Poverty Estimates (SAIPE)](https://www.census.gov/data-tools/demo/saipe/#/) from the US Census Bureau from 2018-2022.  
 
 ### 2. Clean Data
 - `bls_clean.xlsx` is the cleaned unemployment data including FIPS code, county, state, year, and unemployment rate for all states in Appalachia. 
