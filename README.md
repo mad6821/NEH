@@ -3,9 +3,9 @@
 This repository contains code to replicate analyses for Health of the Humanities in Appalachia (published link forthcoming). 
 
 ### Data
-- Econ Data includes all economic data used in analysis
-- NEH Data includes all publicly available grant data
-- `df_clean.csv` includes the merged economic and NEH data for all counties served by the Appalachian Regional Commission (ARC). This is the main dataset for analysis.
+- Econ Data includes all economic data used in the analysis.
+- NEH Data includes all publicly available grant data.
+- `df_clean.csv` includes the merged economic and NEH data for all counties served by the [Appalachian Regional Commission (ARC)](https://www.arc.gov/appalachian-counties-served-by-arc/). This is the main dataset for analysis.
 - `arc_clean.csv` includes Appalachian states and counties, using designation from ARC.
 
 ## Scripts
