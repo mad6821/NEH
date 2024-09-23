@@ -7,7 +7,7 @@
 ##
 ## -----------------------------------------------------------------------------
 
-## libraries (add packages by name in quotes, separated by commas)
+## libraries
 libs <- c("tidyverse", "readxl", "sf", "usmap")
 sapply(libs, require, character.only = TRUE)
 
@@ -15,50 +15,51 @@ sapply(libs, require, character.only = TRUE)
 args <- commandArgs(trailingOnly = TRUE)
 root <- ifelse(length(args) == 0, file.path(".."), args)
 dat_dir <- file.path(root, "data")
+neh_dat_dir <- file.path(dat_dir, "NEHData")
+eco_dat_dir <- file.path(dat_dir, "EconData")
 fig_dir <- file.path(root, "figures")
 scr_dir <- file.path(root, "scripts")
 tab_dir <- file.path(root, "tables")
 
+## -------------------------------------
+## macros
+## -------------------------------------
 
-# Load libraries
-library(readr)
-library(readxl)
-library(dplyr)
-library(tidyverse)
-library(usmap)
-library(sp)
+## appalachian state abbreviations
+app_st <- c("AL", "GA", "KY", "MD", "MS", "NY", "NC", "OH", "PA", "SC", "TN",
+            "VA", "WV")
 
-# Set working directory (may have to set own path file on personal device)
-#setwd("~/Desktop/NEH/Project/MD_InternProject")
+## -----------------------------------------------------------------------------
+## Cleaning, subsetting NEH grant data for Appalachian States
+## -----------------------------------------------------------------------------
 
-###############################################
-# Cleaning, subsetting NEH grant data for  
-# Appalachian States
-###############################################
+## grant data files (use regular expression to pull only right ones
+files <- list.files(neh_dat_dir, pattern = "NEH_Grants")
 
-# Load dataset for 2020s
-grants_20s <- read_csv("NEH Grant Data/NEH_Grants2020s.csv")
+## map read all files
+df_grant <- map(files,
+                ~ read_csv(file.path(neh_dat_dir, .x),
+                           show_col_types = FALSE) |>
+                  ## lower names
+                  rename_all(tolower) |>
+                  ## add file name as column so you know later
+                  mutate(file_name = .x) |>
+                  ## filter to only appalachian states
+                  filter(inststate %in% app_st)) |>
+  bind_rows()
 
-# Clean for Appalachian states
-grants.app <- grants_20s %>%
-  subset(InstState %in% c("AL", "GA", "KY", "MD", "MS", "NY", "NC", "OH", "PA", "SC", "TN", "VA", "WV"))
+## -----------------------------------------------------------------------------
+## Cleaning, subsetting BLS economic data for Appalachian States and merging
+## 2018-2023
+## -----------------------------------------------------------------------------
 
-write.csv(grants.app, "NEH Grant Data/app_data_20s.csv", row.names=FALSE) # export Appalachian states for cleaning
+## grant data files (use regular expression to pull only right ones
+files <- list.files(eco_dat_dir, pattern = "bls_county")
 
-# Load dataset for 2010s
-grants_10s <- read_csv("NEH Grant Data/NEH_Grants2010s.csv")
+## map read all files
+df_bls <- map(files,
+              ~ read_excel(file.path(eco_dat_dir, .x)) |>
 
-# Clean for Appalachian states
-grants.app <- grants_10s %>%
-  subset(InstState %in% c("AL", "GA", "KY", "MD", "MS", "NY", "NC", "OH", "PA", "SC", "TN", "VA", "WV")) %>%
-  subset(YearAwarded >= 2018)
-
-write.csv(grants.app, "NEH Grant Data/app_data_10s.csv", row.names=FALSE) # export Appalachian states for cleaning
-
-###############################################
-# Cleaning, subsetting BLS economic data for  
-# Appalachian States and merging 2018-2023
-###############################################
 # Load in unemployment datasets 2018-2023
 bls_county_18 <- read_excel("Econ Data/bls_county_18.xlsx")
 bls_county_19 <- read_excel("Econ Data/bls_county_19.xlsx")
