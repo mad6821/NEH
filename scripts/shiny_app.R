@@ -22,10 +22,10 @@ library(scales)
 library(htmltools)
 
 # Set working directory (may have to set own path file on personal device)
-setwd("~/Desktop/NEH/Project/MD_InternProject")
+## setwd("~/Desktop/NEH/Project/MD_InternProject")
 
 # Load datasets
-app_econ_df <- read_csv("Econ Data/appalachian_econ_df.csv") # Census economic data for merging
+app_econ_df <- read_csv("EconData/appalachian_econ_df.csv") # Census economic data for merging
 arc_clean <- read_csv("arc_clean.csv") # ARC Data for designated counties in Appalachia
 df_clean <- read_csv("df_clean.csv") # NEH merge with Econ Stats
 df_clean <- df_clean %>%
@@ -40,7 +40,7 @@ app_counties <- unique(df_clean$County) # List of Appalachian counties for plots
 appalachia <- usa %>%
   subset(ID %in% app_states) # Subset sf data to Appalachian region STATES ONLY
 
-counties <- st_as_sf(map("county", plot = FALSE, fill = TRUE)) # COUNTIES DATA
+counties <- st_as_sf(maps::map("county", plot = FALSE, fill = TRUE)) # COUNTIES DATA
 counties <- separate(counties, ID, c("state", "county"), ",") # Separate into two columns
 counties <- subset(counties, state %in% tolower(app_states)) # Subset sf to ALL COUNTIES & STATES in region
 
@@ -58,6 +58,20 @@ counties <- counties %>% # Fix county anomalies
 
 # Subsetting econ data by state, then re-binding together to avoid counties with the same
 # name in different states overlapping one another (i.e., Jefferson Co. in AL, OH, and WV)
+
+appstates <- c("Alabama", "Georgia")
+
+out_list <- purrr::map(appstates,
+                       ~ subset(app_econ_df, State == .x) |>
+                         subset(counties, county %in% tolower(.data$County) & state == .x))
+
+econ_list <- vector("list", length(appstates))
+counties_list <- vector("list", length(appstates))
+for(i in appstates) {
+  tmp_st <- subset(app_econ_df, State == i)
+  counties_list[[i]] <- subset(counties, county %in% tolower(tmp_state[[i]]$County) & state == i)
+  econ_list[[i]] <- tmp_state
+}
 
 # Alabama
 econ_al <- subset(app_econ_df, State == "Alabama")

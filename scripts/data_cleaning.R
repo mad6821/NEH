@@ -1,9 +1,24 @@
-###############################################
-# Data Cleaning for Intern Project
-# Maya A. Dalton
-# August 2024
-###############################################
-rm(list=ls())
+## -----------------------------------------------------------------------------
+##
+## [ PROJ ] Appalachian funding
+## [ FILE ] data_cleaning.R
+## [ AUTH ] Maya A. Dalton; mdalton@neh.gov
+## [ INIT ] August 2024
+##
+## -----------------------------------------------------------------------------
+
+## libraries (add packages by name in quotes, separated by commas)
+libs <- c("tidyverse", "readxl", "sf", "usmap")
+sapply(libs, require, character.only = TRUE)
+
+## paths (./scripts as working directory)
+args <- commandArgs(trailingOnly = TRUE)
+root <- ifelse(length(args) == 0, file.path(".."), args)
+dat_dir <- file.path(root, "data")
+fig_dir <- file.path(root, "figures")
+scr_dir <- file.path(root, "scripts")
+tab_dir <- file.path(root, "tables")
+
 
 # Load libraries
 library(readr)
