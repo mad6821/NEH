@@ -177,7 +177,7 @@ df <- df_grant |>
   left_join(df_eco, by = c("fips", "yearawarded" = "year"))
 
 ## save
-write_csv(df, "df_clean.csv")
+write_csv(df, file.path(dat_dir, "df_clean.csv"))
 
 ## -----------------------------------------------------------------------------
 ## end script
