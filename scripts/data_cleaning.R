@@ -15,8 +15,6 @@ sapply(libs, require, character.only = TRUE)
 args <- commandArgs(trailingOnly = TRUE)
 root <- ifelse(length(args) == 0, file.path(".."), args)
 dat_dir <- file.path(root, "data")
-neh_dat_dir <- file.path(dat_dir, "NEHData")
-eco_dat_dir <- file.path(dat_dir, "EconData")
 fig_dir <- file.path(root, "figures")
 scr_dir <- file.path(root, "scripts")
 tab_dir <- file.path(root, "tables")
@@ -33,16 +31,35 @@ app_st <- c("AL", "GA", "KY", "MD", "MS", "NY", "NC", "OH", "PA", "SC", "TN",
             "VA", "WV")
 
 ## counties
-ct_10 <- read_csv(file.path(dat_dir, "national_county.txt"),
-                  col_names = c("stabbr", "stfips", "ctfips", "name", "status")) |>
-  mutate(fips = paste0(stfips, ctfips)) |>
-  select(fips, name)
+cw_ct <- map(award_period,
+             ~ read_delim(unz(file.path(dat_dir,
+                                        "gaz",
+                                        paste0(.x,
+                                               "_Gaz_counties_national.zip")),
+                              paste0(.x, "_Gaz_counties_national.txt")),
+                          delim = "\t",
+                          show_col_types = FALSE) |>
+               rename_all(tolower) |>
+               select(fips = geoid, name) |>
+               mutate(year = .x)) |>
+  bind_rows() |>
+  arrange(fips, year)
 
-ct_20 <- read_delim(file.path(dat_dir, "national_county2020.txt"),
-                    delim = "|") |>
-  rename_all(tolower) |>
-  mutate(fips = paste0(statefp, countyfp)) |>
-  select(fips, name = countyname)
+## zctas
+cw_zcta <- map(award_period,
+             ~ read_delim(unz(file.path(dat_dir,
+                                        "gaz",
+                                        paste0(.x,
+                                               "_Gaz_zcta_national.zip")),
+                              paste0(.x, "_Gaz_zcta_national.txt")),
+                          delim = "\t",
+                          show_col_types = FALSE,
+                          trim_ws = TRUE) |>
+               rename_all(tolower) |>
+               select(zip = geoid, ziplon = intptlong, ziplat = intptlat) |>
+               mutate(year = .x)) |>
+  bind_rows() |>
+  arrange(zip, year)
 
 ## make a state crosswalk for use
 cw_st_app <- stcrosswalk |>
@@ -50,38 +67,30 @@ cw_st_app <- stcrosswalk |>
   filter(stabbr %in% app_st) |>
   mutate(stfips = sprintf("%02d", stfips))
 
-## make a county name crosswalk for use
-## NB: being a little over conservative here to use name with year; doing so
-## just in case of name change between 2010 and 2020 censuses
-cw_ct_name <- bind_rows(expand_grid(ct_10, year = award_period[1:2]),
-                        expand_grid(ct_20, year = award_period[3:5])) |>
-  arrange(fips, year)
-
 ## -----------------------------------------------------------------------------
 ## Cleaning, subsetting NEH grant data for Appalachian States
 ## -----------------------------------------------------------------------------
 
 ## grant data files (use regular expression to pull only right ones
-files <- list.files(neh_dat_dir, pattern = "NEH_Grants")
+files <- list.files(file.path(dat_dir, "neh"), full.names = TRUE)
 
 ## map read all files
-## NB: missing lon/lat for 4 records; will need to do fix
-## with zip code geocode; filtering out for now but need to add back in
 df_grant <- map(files,
-                ~ read_csv(file.path(neh_dat_dir, .x),
+                ~ read_csv(.x,
                            na = c("", "NA", "unknown", "Unknown"),
                            show_col_types = FALSE) |>
                   ## lower names
                   rename_all(tolower) |>
-                  ## add file name as column so you know later
-                  mutate(file_name = .x) |>
                   ## filter to only appalachian states
                   filter(inststate %in% app_st) |>
                   ## filter to years of inquiry
-                  filter(yearawarded %in% award_period) |>
-                  ## filter out missing lon/lat (for now)
-                  filter(!is.na(longitude), !is.na(latitude))) |>
-  bind_rows()
+                  filter(yearawarded %in% award_period)) |>
+  bind_rows() |>
+  ## left join on zcta for correction of missing lon/lat
+  mutate(zip = substr(instpostalcode, 1, 5)) |>
+  left_join(cw_zcta, by = c("zip", "yearawarded" = "year")) |>
+  mutate(lon = ifelse(!is.na(longitude), longitude, ziplon),
+         lat = ifelse(!is.na(latitude), latitude, ziplat))
 
 ## -----------------------------------------------------------------------------
 ## Cleaning, subsetting BLS economic data for Appalachian States and merging
@@ -89,16 +98,18 @@ df_grant <- map(files,
 ## -----------------------------------------------------------------------------
 
 ## grant data files (use regular expression to pull only right ones
-files <- list.files(eco_dat_dir, pattern = "bls_county")
+files <- list.files(file.path(dat_dir, "bls"), full.names = TRUE)
 
 ## map read all files
 df_bls <- map(files,
-              ~ read_excel(file.path(eco_dat_dir, .x),
-                           na = "N.A.") |>
+              ~ read_csv(.x,
+                         na = "N.A.",
+                         show_col_types = FALSE) |>
                 rename_all(tolower) |>
-                filter(state_fips %in% cw_app[["stfips"]]) |>
-                mutate(fips = paste0(state_fips, county_fips)) |>
-                mutate(year = year |> as.integer()) |>
+                filter(stfips %in% cw_st_app[["stfips"]]) |>
+                mutate(fips = paste0(stfips, ctfips)) |>
+                mutate(year = year |> as.integer(),
+                       unemp_rate = unemployed_rate |> as.numeric()) |>
                 select(fips, year, unemp_rate)
               ) |>
   bind_rows() |>
@@ -108,6 +119,7 @@ df_bls <- map(files,
 ## Poverty data set
 ## -----------------------------------------------------------------------------
 
+## TODO: replace with new data when added to get_data.R
 df_pov <- read_excel(file.path(eco_dat_dir, "census_poverty.xlsx")) |>
   set_names(tolower) |>
   select(fips = id, year, poverty_rate = `percent in poverty`) |>
@@ -120,11 +132,10 @@ df_pov <- read_excel(file.path(eco_dat_dir, "census_poverty.xlsx")) |>
 ## -----------------------------------------------------------------------------
 
 # Load in ARC Data for counties in Appalachian region
-df_arc <- read_csv(file.path(dat_dir, "arc_clean.csv"),
-                   show_col_types = FALSE) |>
+df_arc <- read_excel(list.files(file.path(dat_dir, "arc"), full.names = TRUE),
+                     skip = 4) |>
   rename_all(tolower) |>
-  mutate(across(everything(), ~ str_trim(.x)),
-         appalachia = 1) |>
+  mutate(appalachia = 1) |>
   select(fips, appalachia)
 
 ## -----------------------------------------------------------------------------
@@ -144,11 +155,15 @@ df_eco <- df_bls |>
 ## place applications in counties
 ## -----------------------------------------------------------------------------
 
+## TODO: figure reading shapefile from within zip
+
 ## read in shapefiles
 df_shp <- map(award_period,
-              ~ st_read(file.path(dat_dir, "tiger",
-                                  paste0("tl_", .x, "_us_county"),
-                                  paste0("tl_", .x, "_us_county.shp"))) |>
+              ~ st_read(unzip(file.path(dat_dir,
+                                        "tiger",
+                                        paste0("tl_", .x, "_us_county.zip")),
+                              exdir = tempfile()),
+                        file.path(tempdir(), paste0("tl_", .x, "_us_county.shp"))) |>
                 rename_all(tolower) |>
                 select(fips = geoid, geometry)) |>
   set_names(paste0("y", award_period))
@@ -157,7 +172,7 @@ df_shp <- map(award_period,
 df_grant_fips <- map(award_period,
                      ~ df_grant |>
                        filter(yearawarded == .x) |>
-                       select(appnumber, lon = longitude, lat = latitude) |>
+                       select(appnumber, lon, lat) |>
                        mutate(across(c("lon", "lat"), ~ as.numeric(.x))) |>
                        st_as_sf(coords = c("lon", "lat"), crs = "NAD83") |>
                        st_join(df_shp[[paste0("y", .x)]]) |>
