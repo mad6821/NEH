@@ -20,6 +20,17 @@ scr_dir <- file.path(root, "scripts")
 tab_dir <- file.path(root, "tables")
 
 ## -------------------------------------
+## functions
+## -------------------------------------
+
+## to read shapefiles from zip file
+st_read_zip <- function(zfile) {
+  tmp <- tempfile()
+  unzip(zfile, exdir = tmp)
+  st_read(dsn = tmp)
+}
+
+## -------------------------------------
 ## macros
 ## -------------------------------------
 
@@ -119,12 +130,21 @@ df_bls <- map(files,
 ## Poverty data set
 ## -----------------------------------------------------------------------------
 
-## TODO: replace with new data when added to get_data.R
-df_pov <- read_excel(file.path(eco_dat_dir, "census_poverty.xlsx")) |>
-  set_names(tolower) |>
-  select(fips = id, year, poverty_rate = `percent in poverty`) |>
-  mutate(fips = sprintf("%05d", fips)) |>
-  select(fips, year, poverty_rate) |>
+df_pov <- map(list.files(file.path(dat_dir, "saipe"), full.names = TRUE),
+              ~ read_excel(.x, skip = 3, na = (".")) |>
+                set_names(tolower) |>
+                select(stfips = `state fips code`,
+                       ctfips = `county fips code`,
+                       poverty_rate = `poverty percent, all ages`) |>
+                mutate(poverty_rate = poverty_rate |> as.numeric(),
+                       fips = paste0(stfips, ctfips),
+                       year = paste0("20",
+                                     str_replace(.x,
+                                                 "^.+(\\d{2})all\\.xls",
+                                                 "\\1")) |> as.numeric()) |>
+                filter(ctfips != "000") |>
+                select(fips, year, poverty_rate)) |>
+  bind_rows() |>
   arrange(fips, year)
 
 ## -----------------------------------------------------------------------------
@@ -146,7 +166,7 @@ df_eco <- df_bls |>
   left_join(df_pov, by = c("fips", "year")) |>
   left_join(df_arc, by = "fips") |>
   mutate(appalachia = ifelse(is.na(appalachia), 0, appalachia)) |>
-  left_join(cw_ct_name, by = c("fips", "year")) |>
+  left_join(cw_ct, by = c("fips", "year")) |>
   mutate(stfips = substr(fips, 1, 2)) |>
   left_join(cw_st_app, by = c("stfips")) |>
   select(fips, county = name, stname, stabbr, year, unemp_rate, poverty_rate)
@@ -156,6 +176,15 @@ df_eco <- df_bls |>
 ## -----------------------------------------------------------------------------
 
 ## TODO: figure reading shapefile from within zip
+
+tmpfile <- tempfile()
+
+
+
+tmp <- st_read_zip(file.path(dat_dir,
+                             "tiger",
+                             "tl_2018_us_county.zip"))
+
 
 ## read in shapefiles
 df_shp <- map(award_period,
