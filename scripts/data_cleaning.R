@@ -177,22 +177,11 @@ df_eco <- df_bls |>
 
 ## TODO: figure reading shapefile from within zip
 
-tmpfile <- tempfile()
-
-
-
-tmp <- st_read_zip(file.path(dat_dir,
-                             "tiger",
-                             "tl_2018_us_county.zip"))
-
-
 ## read in shapefiles
 df_shp <- map(award_period,
-              ~ st_read(unzip(file.path(dat_dir,
-                                        "tiger",
-                                        paste0("tl_", .x, "_us_county.zip")),
-                              exdir = tempfile()),
-                        file.path(tempdir(), paste0("tl_", .x, "_us_county.shp"))) |>
+              ~ st_read_zip(file.path(dat_dir,
+                                      "tiger",
+                                      paste0("tl_", .x, "_us_county.zip"))) |>
                 rename_all(tolower) |>
                 select(fips = geoid, geometry)) |>
   set_names(paste0("y", award_period))
@@ -221,7 +210,7 @@ df <- df_grant |>
   left_join(df_eco, by = c("fips", "yearawarded" = "year"))
 
 ## save
-write_csv(df, file.path(dat_dir, "df_clean.csv"))
+write_csv(df, file.path(dat_dir, "analysis.csv"))
 
 ## -----------------------------------------------------------------------------
 ## end script
