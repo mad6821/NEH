@@ -42,8 +42,6 @@ walk(1:2,
                                "neh",
                                paste0("NEH_Grants20", .x, "0s.csv")),
                      mode = "wb"))
-https://apps.neh.gov/open/data/NEH_Grants2010s.csv
-https://apps.neh.gov/open/data/NEH_Grants2020s.csv
 
 ## -----------------------------------------------------------------------------
 ## county shapefiles
@@ -138,7 +136,22 @@ walk2(out,
 ## poverty data
 ## -----------------------------------------------------------------------------
 
-## TODO
+## make directory if it doesn't exist
+dir.create(file.path(dat_dir, "saipe"), showWarnings = FALSE)
+
+## base url
+base_url <- "https://www2.census.gov/programs-surveys/saipe/datasets"
+
+## loop through
+walk(yrs[-length(yrs)],
+     ~ download.file(file.path(base_url,
+                               .x,
+                               paste0(.x, "-state-and-county"),
+                               paste0("est", substr(.x,3,4), "all.xls")),
+                     file.path(dat_dir,
+                               "saipe",
+                               paste0("est", substr(.x,3,4), "all.xls")),
+                     mode = "wb"))
 
 ## -----------------------------------------------------------------------------
 ## ARC data
