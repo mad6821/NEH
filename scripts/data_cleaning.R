@@ -169,7 +169,8 @@ df_eco <- df_bls |>
   left_join(cw_ct, by = c("fips", "year")) |>
   mutate(stfips = substr(fips, 1, 2)) |>
   left_join(cw_st_app, by = c("stfips")) |>
-  select(fips, county = name, stname, stabbr, year, unemp_rate, poverty_rate)
+  select(fips, county = name, appalachia, stname, stabbr, year, unemp_rate,
+         poverty_rate)
 
 ## -----------------------------------------------------------------------------
 ## place applications in counties
