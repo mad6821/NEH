@@ -2,13 +2,13 @@
 ##
 ## [ PROJ ] Appalachian funding
 ## [ FILE ] data_cleaning.R
-## [ AUTH ] Maya A. Dalton; mdalton@neh.gov
-## [ INIT ] August 2024
+## [ AUTH ] Benjamin Skinner; bskinner@neh.gov & Maya Dalton; mdalton@neh.gov
+## [ INIT ] 02 October 2024
 ##
 ## -----------------------------------------------------------------------------
 
 ## libraries
-libs <- c("tidyverse", "readxl", "sf", "crosswalkr")
+libs <- c("tidyverse", "readxl", "sf", "crosswalkr", "plyr")
 sapply(libs, require, character.only = TRUE)
 
 ## paths (./scripts as working directory)
@@ -103,6 +103,22 @@ df_grant <- map(files,
   mutate(lon = ifelse(!is.na(longitude), longitude, ziplon),
          lat = ifelse(!is.na(latitude), latitude, ziplat))
 
+df_grant <- df_grant |>
+  mutate(newdiscipline = case_when(
+    str_detect(primarydiscipline, "Art|Dance|Film|Arts|Media|Theatre|Ethnomusicology|Aesthetics") ~ "Arts",
+    str_detect(primarydiscipline, "History|Civilization|Renaissance Studies|Medieval Studies") ~ "History",
+    str_detect(primarydiscipline, "Literature|Literary|Classics|English|Composition and Rhetoric") ~ "Literature",
+    str_detect(primarydiscipline, "Language|Linguistics|Languages|Linguistic") ~ "Language",
+    str_detect(primarydiscipline, "Anthropology|Archaeology|Religion|Linguistic|Logic|Digital Preservation|
+               |Journalism|Folklore and Folklife|Ethics|Philosophy|Law|Phenomenology - Existentialism") ~ "Humanities",
+    str_detect(primarydiscipline, "Social Sciences|Architecture|Communications|Geography|Comparative Politics|
+               |International|Political|Government|Conservation|Psychology|Sociology|Economics") ~ "Social Science",
+    str_detect(primarydiscipline, "Interdisciplinary") ~ "Interdisciplinary",
+    str_detect(primarydiscipline, "Studies") ~ "Area Studies",
+    TRUE ~ primarydiscipline
+  )
+)
+
 ## -----------------------------------------------------------------------------
 ## Cleaning, subsetting BLS economic data for Appalachian States and merging
 ## 2018-2023
@@ -113,14 +129,12 @@ files <- list.files(file.path(dat_dir, "bls"), full.names = TRUE)
 
 ## map read all files
 df_bls <- map(files,
-              ~ read_csv(.x,
-                         na = "N.A.",
-                         show_col_types = FALSE) |>
+              ~ read_excel(.x) |>
                 rename_all(tolower) |>
-                filter(stfips %in% cw_st_app[["stfips"]]) |>
-                mutate(fips = paste0(stfips, ctfips)) |>
+                filter(state_fips %in% cw_st_app[["stfips"]]) |>
+                mutate(fips = paste0(state_fips, county_fips)) |>
                 mutate(year = year |> as.integer(),
-                       unemp_rate = unemployed_rate |> as.numeric()) |>
+                       unemp_rate = unemp_rate |> as.numeric()) |>
                 select(fips, year, unemp_rate)
               ) |>
   bind_rows() |>
@@ -159,23 +173,65 @@ df_arc <- read_excel(list.files(file.path(dat_dir, "arc"), full.names = TRUE),
   select(fips, appalachia)
 
 ## -----------------------------------------------------------------------------
+## IPEDS data
+## -----------------------------------------------------------------------------
+
+df_ipeds <- map(award_period,
+                ~ read_delim(unz(file.path(dat_dir,
+                         "ipeds",
+                         paste0("HD", .x, ".zip")),
+               paste0(paste0("hd", .x, ".csv")))) |>
+              mutate(CCBASIC2 = case_when(
+                  CCBASIC %in% c(1:8, 11:12) ~ 1, # Associates - Public
+                  CCBASIC %in% c(9:10, 13:14) ~ 2, # Associates - Private
+                  CCBASIC == 15 ~ 3, # Research University (Very High Activity)
+                  CCBASIC == 16 ~ 4, # Research University (High Activity)
+                  CCBASIC == 17 ~ 5, # Doctoral/Research University
+                  CCBASIC == 18 ~ 6, # Master’s (Large)
+                  CCBASIC == 19 ~ 7, # Master’s (Medium)
+                  CCBASIC == 20 ~ 8, # Master’s (Small)
+                  CCBASIC %in% c(21:23) ~ 9, # Baccalaureate Colleges
+                  CCBASIC == 24 ~ 10, # Faith-Related Institutions
+                  CCBASIC == 25 ~ 11, # Medical Schools
+                  CCBASIC == 26 ~ 12, # Other health profession schools
+                  CCBASIC == 27 ~ 13, # Engineering schools
+                  CCBASIC == 28 ~ 14, # Other tech-related schools
+                  CCBASIC == 29 ~ 15, # Business/Management Schools 
+                  CCBASIC == 30 ~ 16, # Art, Music, and Design Schools
+                  CCBASIC == 31 ~ 17, # Law Schools
+                  CCBASIC == 32 ~ 18, # Other special-focus institutions
+                  CCBASIC == 33 ~ 19, # Tribal colleges
+                  CCBASIC == -2 ~ NA, # Non-carnegie institutions
+                ),
+                FIPS = as.character(COUNTYCD),
+                FIPS = ifelse(nchar(FIPS) == 4, # Add leading zero to FIPS codes with 4 characters for merge
+                              paste0("0", FIPS),
+                              FIPS)) |>
+              select(UNITID, INSTNM, CITY, STABBR, HBCU, TRIBAL, CCBASIC2, COUNTYNM, LONGITUD, LATITUDE, ZIP, FIPS) |>
+              rename_all(tolower)
+              ) |>
+  bind_rows() |>
+  distinct() |>
+  arrange(stabbr, fips)
+
+## -----------------------------------------------------------------------------
 ## join BLS, poverty, appalachia, and state crosswalk data
 ## -----------------------------------------------------------------------------
 
 df_eco <- df_bls |>
   left_join(df_pov, by = c("fips", "year")) |>
   left_join(df_arc, by = "fips") |>
+  left_join(df_ipeds, by = "fips") |> 
   mutate(appalachia = ifelse(is.na(appalachia), 0, appalachia)) |>
   left_join(cw_ct, by = c("fips", "year")) |>
   mutate(stfips = substr(fips, 1, 2)) |>
   left_join(cw_st_app, by = c("stfips")) |>
-  select(fips, county = name, stname, stabbr, year, unemp_rate, poverty_rate)
+  select(fips, county = name, appalachia, stname, stabbr.y, year, unemp_rate, poverty_rate,
+         hbcu, tribal, ccbasic2)
 
 ## -----------------------------------------------------------------------------
 ## place applications in counties
 ## -----------------------------------------------------------------------------
-
-## TODO: figure reading shapefile from within zip
 
 ## read in shapefiles
 df_shp <- map(award_period,
