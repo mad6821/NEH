@@ -1,0 +1,58 @@
+##
+## This is as list of all IPEDS files as given in the
+## complete data files portal. If you want to add files
+## that I've missed, be sure they match the name of the
+## link in the Data File column of the drop down table.
+##
+## You can prevent the script from downloading
+## specific files by either commenting out the name with
+## a hash symbol (#) or erasing it all together.
+##
+## Keep in mind that if you've already downloaded some
+## of the files before, the download script will not
+## download them again unless you change the -overwrite-
+## option to TRUE.
+##
+
+## -------------------------------
+## LAST UPDATED: 27 August 2024
+## -------------------------------
+
+# NB: Those files marked out are not currently available, but likely
+# to be available in the future.
+
+## ---------------------------
+## 2023
+## ---------------------------
+
+HD2023
+
+## ---------------------------
+## 2022
+## ---------------------------
+
+HD2022
+
+## ---------------------------
+## 2021
+## ---------------------------
+
+HD2021
+
+## ---------------------------
+## 2020
+## ---------------------------
+
+HD2020
+
+## ---------------------------
+## 2019
+## ---------------------------
+
+HD2019
+
+## ---------------------------
+## 2018
+## ---------------------------
+
+HD2018

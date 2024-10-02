@@ -1,130 +1,273 @@
-###############################################
-# Data Cleaning for Intern Project
-# Maya A. Dalton
-# August 2024
-###############################################
-rm(list=ls())
+## -----------------------------------------------------------------------------
+##
+## [ PROJ ] Appalachian funding
+## [ FILE ] data_cleaning.R
+## [ AUTH ] Benjamin Skinner; bskinner@neh.gov & Maya Dalton; mdalton@neh.gov
+## [ INIT ] 02 October 2024
+##
+## -----------------------------------------------------------------------------
 
-# Load libraries
-library(readr)
-library(readxl)
-library(dplyr)
-library(tidyverse)
-library(usmap)
-library(sp)
+## libraries
+libs <- c("tidyverse", "readxl", "sf", "crosswalkr", "plyr")
+sapply(libs, require, character.only = TRUE)
 
-# Set working directory (may have to set own path file on personal device)
-#setwd("~/Desktop/NEH/Project/MD_InternProject")
+## paths (./scripts as working directory)
+args <- commandArgs(trailingOnly = TRUE)
+root <- ifelse(length(args) == 0, file.path(".."), args)
+dat_dir <- file.path(root, "data")
+fig_dir <- file.path(root, "figures")
+scr_dir <- file.path(root, "scripts")
+tab_dir <- file.path(root, "tables")
 
-###############################################
-# Cleaning, subsetting NEH grant data for  
-# Appalachian States
-###############################################
+## -------------------------------------
+## functions
+## -------------------------------------
 
-# Load dataset for 2020s
-grants_20s <- read_csv("NEH Grant Data/NEH_Grants2020s.csv")
+## to read shapefiles from zip file
+st_read_zip <- function(zfile) {
+  tmp <- tempfile()
+  unzip(zfile, exdir = tmp)
+  st_read(dsn = tmp)
+}
 
-# Clean for Appalachian states
-grants.app <- grants_20s %>%
-  subset(InstState %in% c("AL", "GA", "KY", "MD", "MS", "NY", "NC", "OH", "PA", "SC", "TN", "VA", "WV"))
+## -------------------------------------
+## macros
+## -------------------------------------
 
-write.csv(grants.app, "NEH Grant Data/app_data_20s.csv", row.names=FALSE) # export Appalachian states for cleaning
+## award period
+award_period <- 2018:2023
 
-# Load dataset for 2010s
-grants_10s <- read_csv("NEH Grant Data/NEH_Grants2010s.csv")
+## appalachian state abbreviations
+app_st <- c("AL", "GA", "KY", "MD", "MS", "NY", "NC", "OH", "PA", "SC", "TN",
+            "VA", "WV")
 
-# Clean for Appalachian states
-grants.app <- grants_10s %>%
-  subset(InstState %in% c("AL", "GA", "KY", "MD", "MS", "NY", "NC", "OH", "PA", "SC", "TN", "VA", "WV")) %>%
-  subset(YearAwarded >= 2018)
+## counties
+cw_ct <- map(award_period,
+             ~ read_delim(unz(file.path(dat_dir,
+                                        "gaz",
+                                        paste0(.x,
+                                               "_Gaz_counties_national.zip")),
+                              paste0(.x, "_Gaz_counties_national.txt")),
+                          delim = "\t",
+                          show_col_types = FALSE) |>
+               rename_all(tolower) |>
+               select(fips = geoid, name) |>
+               mutate(year = .x)) |>
+  bind_rows() |>
+  arrange(fips, year)
 
-write.csv(grants.app, "NEH Grant Data/app_data_10s.csv", row.names=FALSE) # export Appalachian states for cleaning
+## zctas
+cw_zcta <- map(award_period,
+             ~ read_delim(unz(file.path(dat_dir,
+                                        "gaz",
+                                        paste0(.x,
+                                               "_Gaz_zcta_national.zip")),
+                              paste0(.x, "_Gaz_zcta_national.txt")),
+                          delim = "\t",
+                          show_col_types = FALSE,
+                          trim_ws = TRUE) |>
+               rename_all(tolower) |>
+               select(zip = geoid, ziplon = intptlong, ziplat = intptlat) |>
+               mutate(year = .x)) |>
+  bind_rows() |>
+  arrange(zip, year)
 
-###############################################
-# Cleaning, subsetting BLS economic data for  
-# Appalachian States and merging 2018-2023
-###############################################
-# Load in unemployment datasets 2018-2023
-bls_county_18 <- read_excel("Econ Data/bls_county_18.xlsx")
-bls_county_19 <- read_excel("Econ Data/bls_county_19.xlsx")
-bls_county_20 <- read_excel("Econ Data/bls_county_20.xlsx")
-bls_county_21 <- read_excel("Econ Data/bls_county_21.xlsx")
-bls_county_22 <- read_excel("Econ Data/bls_county_22.xlsx")
-bls_county_23 <- read_excel("Econ Data/bls_county_23.xlsx")
+## make a state crosswalk for use
+cw_st_app <- stcrosswalk |>
+  select(stfips, stabbr, stname) |>
+  filter(stabbr %in% app_st) |>
+  mutate(stfips = sprintf("%02d", stfips))
 
-# Full join of all datasets
-bls_county <- full_join(bls_county_18, full_join(bls_county_19, full_join(bls_county_20, full_join(bls_county_21, full_join(bls_county_22, bls_county_23)))))
-bls_county <- separate(bls_county, County_State, c("County" , "State"), ", ") # Separate state and county
+## -----------------------------------------------------------------------------
+## Cleaning, subsetting NEH grant data for Appalachian States
+## -----------------------------------------------------------------------------
 
-bls_county$FIPS <- paste(bls_county$State_FIPS, bls_county$County_FIPS, sep="") # Combine FIPS
-bls_county <- bls_county %>% # Drop DC and NAs
-  drop_na()
+## grant data files (use regular expression to pull only right ones
+files <- list.files(file.path(dat_dir, "neh"), full.names = TRUE)
 
-bls_county.c <- bls_county %>% # Remove 'county' in text
-  mutate(County = str_remove_all(County, " County")) 
+## map read all files
+df_grant <- map(files,
+                ~ read_csv(.x,
+                           na = c("", "NA", "unknown", "Unknown"),
+                           show_col_types = FALSE) |>
+                  ## lower names
+                  rename_all(tolower) |>
+                  ## filter to only appalachian states
+                  filter(inststate %in% app_st) |>
+                  ## filter to years of inquiry
+                  filter(yearawarded %in% award_period)) |>
+  bind_rows() |>
+  ## left join on zcta for correction of missing lon/lat
+  mutate(zip = substr(instpostalcode, 1, 5)) |>
+  left_join(cw_zcta, by = c("zip", "yearawarded" = "year")) |>
+  mutate(lon = ifelse(!is.na(longitude), longitude, ziplon),
+         lat = ifelse(!is.na(latitude), latitude, ziplat))
 
-bls_county.c <- bls_county.c %>% # Subset for Appalachian states
-  subset(State %in% c("AL", "GA", "KY", "MD", "MS", "NY", "NC", "OH", "PA", "SC", "TN", "VA", "WV"))
+df_grant <- df_grant |>
+  mutate(newdiscipline = case_when(
+    str_detect(primarydiscipline, "Art|Dance|Film|Arts|Media|Theatre|Ethnomusicology|Aesthetics") ~ "Arts",
+    str_detect(primarydiscipline, "History|Civilization|Renaissance Studies|Medieval Studies") ~ "History",
+    str_detect(primarydiscipline, "Literature|Literary|Classics|English|Composition and Rhetoric") ~ "Literature",
+    str_detect(primarydiscipline, "Language|Linguistics|Languages|Linguistic") ~ "Language",
+    str_detect(primarydiscipline, "Anthropology|Archaeology|Religion|Linguistic|Logic|Digital Preservation|
+               |Journalism|Folklore and Folklife|Ethics|Philosophy|Law|Phenomenology - Existentialism") ~ "Humanities",
+    str_detect(primarydiscipline, "Social Sciences|Architecture|Communications|Geography|Comparative Politics|
+               |International|Political|Government|Conservation|Psychology|Sociology|Economics") ~ "Social Science",
+    str_detect(primarydiscipline, "Interdisciplinary") ~ "Interdisciplinary",
+    str_detect(primarydiscipline, "Studies") ~ "Area Studies",
+    TRUE ~ primarydiscipline
+  )
+)
 
-bls_county.c$Year <- as.numeric(bls_county.c$Year) # Convert year to numeric for merge
-bls_county.c <- bls_county.c %>% select(FIPS, County, State, Year, Unemp_Rate) # Reorder columns
+## -----------------------------------------------------------------------------
+## Cleaning, subsetting BLS economic data for Appalachian States and merging
+## 2018-2023
+## -----------------------------------------------------------------------------
 
-write.csv(bls_county.c, "Econ Data/bls_clean.csv", row.names=FALSE) # export unemp data
+## grant data files (use regular expression to pull only right ones
+files <- list.files(file.path(dat_dir, "bls"), full.names = TRUE)
 
-# Load in poverty dataset 2018-2022
-census_poverty <- read_excel("Econ Data/census_poverty.xlsx")
-colnames(census_poverty) <- c("Year", "FIPS", "County", "Poverty_Rate") # Change column names
-census_poverty$FIPS <- as.character(census_poverty$FIPS) # Convert FIPS to character for merge
+## map read all files
+df_bls <- map(files,
+              ~ read_excel(.x) |>
+                rename_all(tolower) |>
+                filter(state_fips %in% cw_st_app[["stfips"]]) |>
+                mutate(fips = paste0(state_fips, county_fips)) |>
+                mutate(year = year |> as.integer(),
+                       unemp_rate = unemp_rate |> as.numeric()) |>
+                select(fips, year, unemp_rate)
+              ) |>
+  bind_rows() |>
+  arrange(fips, year)
 
-census_poverty$FIPS <- ifelse(nchar(census_poverty$FIPS) == 4,
-                              paste0("0", census_poverty$FIPS),
-                              census_poverty$FIPS)
+## -----------------------------------------------------------------------------
+## Poverty data set
+## -----------------------------------------------------------------------------
 
-census_poverty <- census_poverty %>% # Remove 'county' in text
-  mutate(County = str_remove_all(County, " County")) 
+df_pov <- map(list.files(file.path(dat_dir, "saipe"), full.names = TRUE),
+              ~ read_excel(.x, skip = 3, na = (".")) |>
+                set_names(tolower) |>
+                select(stfips = `state fips code`,
+                       ctfips = `county fips code`,
+                       poverty_rate = `poverty percent, all ages`) |>
+                mutate(poverty_rate = poverty_rate |> as.numeric(),
+                       fips = paste0(stfips, ctfips),
+                       year = paste0("20",
+                                     str_replace(.x,
+                                                 "^.+(\\d{2})all\\.xls",
+                                                 "\\1")) |> as.numeric()) |>
+                filter(ctfips != "000") |>
+                select(fips, year, poverty_rate)) |>
+  bind_rows() |>
+  arrange(fips, year)
 
-census_poverty <- census_poverty %>% select(FIPS, County, Year, Poverty_Rate) # Reorder columns
-write.csv(census_poverty, "Econ Data/census_clean.csv", row.names=FALSE) # export poverty data
-
-econ_full <- left_join(bls_county.c, census_poverty, by=c("FIPS", "Year", "County"))
-
-# Create new column of state full names using crosswalk table
-st_crosswalk <- tibble(state = state.name) %>%
-  bind_cols(tibble(abb = state.abb)) %>% 
-  bind_rows(tibble(state = "District of Columbia", abb = "DC"))
-
-econ_full <- left_join(st_crosswalk, econ_full, by=c("abb"="State")) # Merge
-colnames(econ_full) <- c("State", "St_Abbr", "FIPS", "County", "Year", "Unemp_Rate", "Poverty_Rate") # Column rename
-
-econ_full <- econ_full %>% select(FIPS, State, St_Abbr, County, Year, Unemp_Rate, Poverty_Rate) # Reorder columns
-write.csv(econ_full, "Econ Data/econ_df.csv", row.names=FALSE) # export all econ data
+## -----------------------------------------------------------------------------
+## ARC data
+## -----------------------------------------------------------------------------
 
 # Load in ARC Data for counties in Appalachian region
-arc_clean <- read_csv("arc_clean.csv")
-arc_clean <- arc_clean %>%
-  mutate_if(is.character, str_trim) # Trim whitespace off FIPS
+df_arc <- read_excel(list.files(file.path(dat_dir, "arc"), full.names = TRUE),
+                     skip = 4) |>
+  rename_all(tolower) |>
+  mutate(appalachia = 1) |>
+  select(fips, appalachia)
 
-appalachia_full <- subset(econ_full, FIPS %in% arc_clean$FIPS) # Subset econ data for App counties
+## -----------------------------------------------------------------------------
+## IPEDS data
+## -----------------------------------------------------------------------------
 
-write.csv(appalachia_full, "Econ Data/appalachian_econ_df.csv", row.names=FALSE)
+df_ipeds <- map(award_period,
+                ~ read_delim(unz(file.path(dat_dir,
+                         "ipeds",
+                         paste0("HD", .x, ".zip")),
+               paste0(paste0("hd", .x, ".csv")))) |>
+              mutate(CCBASIC2 = case_when(
+                  CCBASIC %in% c(1:8, 11:12) ~ 1, # Associates - Public
+                  CCBASIC %in% c(9:10, 13:14) ~ 2, # Associates - Private
+                  CCBASIC == 15 ~ 3, # Research University (Very High Activity)
+                  CCBASIC == 16 ~ 4, # Research University (High Activity)
+                  CCBASIC == 17 ~ 5, # Doctoral/Research University
+                  CCBASIC == 18 ~ 6, # Master’s (Large)
+                  CCBASIC == 19 ~ 7, # Master’s (Medium)
+                  CCBASIC == 20 ~ 8, # Master’s (Small)
+                  CCBASIC %in% c(21:23) ~ 9, # Baccalaureate Colleges
+                  CCBASIC == 24 ~ 10, # Faith-Related Institutions
+                  CCBASIC == 25 ~ 11, # Medical Schools
+                  CCBASIC == 26 ~ 12, # Other health profession schools
+                  CCBASIC == 27 ~ 13, # Engineering schools
+                  CCBASIC == 28 ~ 14, # Other tech-related schools
+                  CCBASIC == 29 ~ 15, # Business/Management Schools 
+                  CCBASIC == 30 ~ 16, # Art, Music, and Design Schools
+                  CCBASIC == 31 ~ 17, # Law Schools
+                  CCBASIC == 32 ~ 18, # Other special-focus institutions
+                  CCBASIC == 33 ~ 19, # Tribal colleges
+                  CCBASIC == -2 ~ NA, # Non-carnegie institutions
+                ),
+                FIPS = as.character(COUNTYCD),
+                FIPS = ifelse(nchar(FIPS) == 4, # Add leading zero to FIPS codes with 4 characters for merge
+                              paste0("0", FIPS),
+                              FIPS)) |>
+              select(UNITID, INSTNM, CITY, STABBR, HBCU, TRIBAL, CCBASIC2, COUNTYNM, LONGITUD, LATITUDE, ZIP, FIPS) |>
+              rename_all(tolower)
+              ) |>
+  bind_rows() |>
+  distinct() |>
+  arrange(stabbr, fips)
 
-###############################################
-# Merge NEH and BLS datasets
-###############################################
-# Load in NEH data from 2018-2023
-app_data_clean <- read_excel("NEH Grant Data/neh_appalachian_data.xlsx")
+## -----------------------------------------------------------------------------
+## join BLS, poverty, appalachia, and state crosswalk data
+## -----------------------------------------------------------------------------
 
-app_data_clean <- app_data_clean %>%
-  mutate(Discipline = case_when(
-    Discipline == "NA" ~ "Unknown",
-    .default = as.character(Discipline)
-  ))
+df_eco <- df_bls |>
+  left_join(df_pov, by = c("fips", "year")) |>
+  left_join(df_arc, by = "fips") |>
+  left_join(df_ipeds, by = "fips") |> 
+  mutate(appalachia = ifelse(is.na(appalachia), 0, appalachia)) |>
+  left_join(cw_ct, by = c("fips", "year")) |>
+  mutate(stfips = substr(fips, 1, 2)) |>
+  left_join(cw_st_app, by = c("stfips")) |>
+  select(fips, county = name, appalachia, stname, stabbr.y, year, unemp_rate, poverty_rate,
+         hbcu, tribal, ccbasic2)
 
-df <- left_join(app_data_clean, appalachia_full, by=c("County", "State"="St_Abbr", "YearAwarded"="Year"))
-names(df)[names(df) == "State"] <- "St_Abbr"
-names(df)[names(df) == "State.y"] <- "State"
+## -----------------------------------------------------------------------------
+## place applications in counties
+## -----------------------------------------------------------------------------
 
-write.csv(df, "df_clean.csv", row.names=FALSE)
+## read in shapefiles
+df_shp <- map(award_period,
+              ~ st_read_zip(file.path(dat_dir,
+                                      "tiger",
+                                      paste0("tl_", .x, "_us_county.zip"))) |>
+                rename_all(tolower) |>
+                select(fips = geoid, geometry)) |>
+  set_names(paste0("y", award_period))
 
+## spatially join applications to get fips for lon/lat
+df_grant_fips <- map(award_period,
+                     ~ df_grant |>
+                       filter(yearawarded == .x) |>
+                       select(appnumber, lon, lat) |>
+                       mutate(across(c("lon", "lat"), ~ as.numeric(.x))) |>
+                       st_as_sf(coords = c("lon", "lat"), crs = "NAD83") |>
+                       st_join(df_shp[[paste0("y", .x)]]) |>
+                       st_drop_geometry()) |>
+  bind_rows()
 
+## join fips back in
+df_grant <- df_grant |>
+  left_join(df_grant_fips, by = "appnumber")
 
+## -----------------------------------------------------------------------------
+## join final data set and save
+## -----------------------------------------------------------------------------
+
+## join
+df <- df_grant |>
+  left_join(df_eco, by = c("fips", "yearawarded" = "year"))
+
+## save
+write_csv(df, file.path(dat_dir, "analysis.csv"))
+
+## -----------------------------------------------------------------------------
+## end script
+## -----------------------------------------------------------------------------
