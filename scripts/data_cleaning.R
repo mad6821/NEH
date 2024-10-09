@@ -3,7 +3,7 @@
 ## [ PROJ ] Appalachian funding
 ## [ FILE ] data_cleaning.R
 ## [ AUTH ] Benjamin Skinner; bskinner@neh.gov & Maya Dalton; mdalton@neh.gov
-## [ INIT ] 02 October 2024
+## [ INIT ] 09 October 2024
 ##
 ## -----------------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ df_grant <- map(files,
   mutate(lon = ifelse(!is.na(longitude), longitude, ziplon),
          lat = ifelse(!is.na(latitude), latitude, ziplat))
 
-df_grant <- df_grant |>
+df_grant <- df_grant |> # Recoding new discipline variable
   mutate(newdiscipline = case_when(
     str_detect(primarydiscipline, "Art|Dance|Film|Arts|Media|Theatre|Ethnomusicology|Aesthetics") ~ "Arts",
     str_detect(primarydiscipline, "History|Civilization|Renaissance Studies|Medieval Studies") ~ "History",
@@ -117,7 +117,8 @@ df_grant <- df_grant |>
     str_detect(primarydiscipline, "Studies") ~ "Area Studies",
     TRUE ~ primarydiscipline
   )
-)
+) |>
+  filter(!grepl("Humanities Council", organizationtype)) # Remove humanities councils
 
 ## -----------------------------------------------------------------------------
 ## Cleaning, subsetting BLS economic data for Appalachian States and merging
