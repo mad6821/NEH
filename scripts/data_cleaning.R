@@ -228,7 +228,7 @@ df_eco <- df_bls |>
   mutate(stfips = substr(fips, 1, 2)) |>
   left_join(cw_st_app, by = c("stfips")) |>
   select(fips, county = name, appalachia, stname, stabbr.y, year, unemp_rate, poverty_rate,
-         hbcu, tribal, ccbasic2)
+         hbcu, tribal, ccbasic2) 
 
 ## -----------------------------------------------------------------------------
 ## place applications in counties
@@ -264,7 +264,11 @@ df_grant <- df_grant |>
 
 ## join
 df <- df_grant |>
-  left_join(df_eco, by = c("fips", "yearawarded" = "year"))
+  left_join(df_eco, by = c("fips", "yearawarded" = "year")) |>
+  mutate(county = str_remove_all(county, " County")) |> # Remove 'county' in text
+  select(appnumber, institution, organizationtype, instcity, inststate, stname, county, appalachia, fips, zip, latitude, longitude, 
+         yearawarded, projecttitle, program, division, awardoutright, newdiscipline, primarydiscipline, disciplines, ziplon, ziplat,
+         lon, lat, unemp_rate, poverty_rate, hbcu, ccbasic2) # Select needed variables
 
 ## save
 write_csv(df, file.path(dat_dir, "analysis.csv"))
