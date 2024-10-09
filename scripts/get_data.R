@@ -2,8 +2,8 @@
 ##
 ## [ PROJ ] Appalachian funding
 ## [ FILE ] get_data.R
-## [ AUTH ] Benjamin Skinner; bskinner@neh.gov
-## [ INIT ] 26 September 2024
+## [ AUTH ] Benjamin Skinner; bskinner@neh.gov & Maya Dalton; mdalton@neh.gov
+## [ INIT ] 02 October 2024
 ##
 ## -----------------------------------------------------------------------------
 
@@ -170,6 +170,14 @@ download.file(file.path(base_url,
                         "arc",
                         "Appalachian-Counties-Served-by-ARC_2021.xlsx"),
               mode = "wb")
+
+## -----------------------------------------------------------------------------
+## IPEDS data
+## -----------------------------------------------------------------------------
+
+## Source code from https://github.com/btskinner/downloadipeds
+
+source("downloadipeds.R")
 
 ## -----------------------------------------------------------------------------
 ## end script

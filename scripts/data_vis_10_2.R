@@ -3,7 +3,7 @@
 ## [ PROJ ] Appalachian funding
 ## [ FILE ] data_vis.R
 ## [ AUTH ] Benjamin Skinner; bskinner@neh.gov & Maya Dalton; mdalton@neh.gov
-## [ INIT ] 02 October 2024
+## [ INIT ] 09 October 2024
 ##
 ## -----------------------------------------------------------------------------
 
@@ -37,7 +37,6 @@ app_st <- c("AL", "GA", "KY", "MD", "MS", "NY", "NC", "OH", "PA", "SC", "TN",
 ## -----------------------------------------------------------------------------
 
 df <- read_csv(file.path(dat_dir, "analysis.csv"))
-
 
 ## -----------------------------------------------------------------------------
 ## Initial Trend Plots
