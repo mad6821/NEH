@@ -130,12 +130,12 @@ files <- list.files(file.path(dat_dir, "bls"), full.names = TRUE)
 
 ## map read all files
 df_bls <- map(files,
-              ~ read_excel(.x) |>
+              ~ read_csv(.x) |>
                 rename_all(tolower) |>
-                filter(state_fips %in% cw_st_app[["stfips"]]) |>
-                mutate(fips = paste0(state_fips, county_fips)) |>
+                filter(stfips %in% cw_st_app[["stfips"]]) |>
+                mutate(fips = paste0(stfips, ctfips)) |>
                 mutate(year = year |> as.integer(),
-                       unemp_rate = unemp_rate |> as.numeric()) |>
+                       unemp_rate = unemployed_rate |> as.numeric()) |>
                 select(fips, year, unemp_rate)
               ) |>
   bind_rows() |>
