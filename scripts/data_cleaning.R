@@ -7,6 +7,20 @@
 ##
 ## -----------------------------------------------------------------------------
 
+## TODO
+## 1. Pull out distinct institutions from grants data and save to csv
+##    - institution name, city, state, zip
+
+## 2. Look for HEIs and likely HEIs (e.g., Georgia Research Foundation) and
+##    associate UNITIDs from IPEDS with them (add as column)
+## 3. Save crosswalk with institution name (as in grants data) and UNITID
+##    - alternatively, leave all columns, but we'll just read in the two
+## 4. Add code in this script to
+##    - read in crosswalk
+##    - left_join() to grants data on name
+##    - left_join() to IPEDS data on UNITID
+## 5. Remove analysis_ipeds.csv save (no longer necessary)
+
 ## libraries
 libs <- c("tidyverse", "readxl", "sf", "crosswalkr")
 sapply(libs, require, character.only = TRUE)
