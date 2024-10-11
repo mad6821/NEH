@@ -175,9 +175,20 @@ download.file(file.path(base_url,
 ## IPEDS data
 ## -----------------------------------------------------------------------------
 
-## Source code from https://github.com/btskinner/downloadipeds
+## make directory if it doesn't exist
+dir.create(file.path(dat_dir, "ipeds"), showWarnings = FALSE)
 
-source("downloadipeds.R")
+## base url
+base_url <- "https://nces.ed.gov/ipeds/datacenter/data"
+
+## download
+walk(yrs,
+     ~ download.file(file.path(base_url,
+                               paste0("HD", .x, ".zip")),
+                     file.path(dat_dir,
+                               "ipeds",
+                               paste0("HD", .x, ".zip")),
+                     mode = "wb"))
 
 ## -----------------------------------------------------------------------------
 ## end script
