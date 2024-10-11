@@ -8,7 +8,7 @@
 ## -----------------------------------------------------------------------------
 
 ## libraries
-libs <- c("tidyverse", "readxl", "sf", "crosswalkr", "plyr")
+libs <- c("tidyverse", "readxl", "sf", "crosswalkr")
 sapply(libs, require, character.only = TRUE)
 
 ## paths (./scripts as working directory)
@@ -103,22 +103,78 @@ df_grant <- map(files,
   mutate(lon = ifelse(!is.na(longitude), longitude, ziplon),
          lat = ifelse(!is.na(latitude), latitude, ziplat))
 
-df_grant <- df_grant |> # Recoding new discipline variable
+## recode disciplines
+## TODO: need to double check regexes
+df_grant <- df_grant |>
   mutate(newdiscipline = case_when(
-    str_detect(primarydiscipline, "Art|Dance|Film|Arts|Media|Theatre|Ethnomusicology|Aesthetics") ~ "Arts",
-    str_detect(primarydiscipline, "History|Civilization|Renaissance Studies|Medieval Studies") ~ "History",
-    str_detect(primarydiscipline, "Literature|Literary|Classics|English|Composition and Rhetoric") ~ "Literature",
-    str_detect(primarydiscipline, "Language|Linguistics|Languages|Linguistic") ~ "Language",
-    str_detect(primarydiscipline, "Anthropology|Archaeology|Religion|Linguistic|Logic|Digital Preservation|
-               |Journalism|Folklore and Folklife|Ethics|Philosophy|Law|Phenomenology - Existentialism") ~ "Humanities",
-    str_detect(primarydiscipline, "Social Sciences|Architecture|Communications|Geography|Comparative Politics|
-               |International|Political|Government|Conservation|Psychology|Sociology|Economics") ~ "Social Science",
+    ## art
+    str_detect(primarydiscipline, paste("Art",
+                                        "Dance",
+                                        "Film",
+                                        "Arts",
+                                        "Media",
+                                        "Theatre",
+                                        "Ethnomusicology",
+                                        "Aesthetics",
+                                        sep = "|")) ~ "Arts",
+    ## history
+    str_detect(primarydiscipline, paste("History",
+                                        "Civilization",
+                                        "Renaissance Studies",
+                                        "Medieval Studies",
+                                        sep = "|")) ~ "History",
+    ## literature
+    str_detect(primarydiscipline, paste("Literature",
+                                        "Literary",
+                                        "Classics",
+                                        "English",
+                                        "Composition and Rhetoric",
+                                        sep = "|")) ~ "Literature",
+    ## language
+    str_detect(primarydiscipline, paste("Language",
+                                        "Linguistics",
+                                        "Languages",
+                                        "Linguistic",
+                                        sep = "|")) ~ "Language",
+    ## humanities
+    str_detect(primarydiscipline, paste("Anthropology",
+                                        "Archaeology",
+                                        "Religion",
+                                        "Linguistic",
+                                        "Logic",
+                                        "Digital Preservation",
+                                        "Journalism",
+                                        "Folklore and Folklife",
+                                        "Ethics",
+                                        "Philosophy",
+                                        "Law",
+                                        "Phenomenology - Existentialism",
+                                        sep = "|")) ~ "Humanities",
+    ## social science
+    str_detect(primarydiscipline, paste("Social Sciences",
+                                        "Architecture",
+                                        "Communications",
+                                        "Geography",
+                                        "Comparative Politics",
+                                        "International",
+                                        "Political",
+                                        "Government",
+                                        "Conservation",
+                                        "Psychology",
+                                        "Sociology",
+                                        "Economics",
+                                        sep = "|")) ~ "Social Science",
+    ## interdisciplinary
     str_detect(primarydiscipline, "Interdisciplinary") ~ "Interdisciplinary",
+    ## area studies
     str_detect(primarydiscipline, "Studies") ~ "Area Studies",
+    ## < remainder >
     TRUE ~ primarydiscipline
-  )
-) |>
-  filter(!grepl("Humanities Council", organizationtype)) # Remove humanities councils
+  ))
+
+## filter our humanities councils
+df_grant <- df_grant |>
+  filter(!grepl("Humanities Council", organizationtype))
 
 ## -----------------------------------------------------------------------------
 ## Cleaning, subsetting BLS economic data for Appalachian States and merging
@@ -130,7 +186,7 @@ files <- list.files(file.path(dat_dir, "bls"), full.names = TRUE)
 
 ## map read all files
 df_bls <- map(files,
-              ~ read_csv(.x) |>
+              ~ read_csv(.x, show_col_types = FALSE) |>
                 rename_all(tolower) |>
                 filter(stfips %in% cw_st_app[["stfips"]]) |>
                 mutate(fips = paste0(stfips, ctfips)) |>
@@ -178,42 +234,55 @@ df_arc <- read_excel(list.files(file.path(dat_dir, "arc"), full.names = TRUE),
 ## -----------------------------------------------------------------------------
 
 df_ipeds <- map(award_period,
-                ~ read_delim(unz(file.path(dat_dir,
-                         "ipeds",
-                         paste0("HD", .x, ".zip")),
-               paste0(paste0("hd", .x, ".csv")))) |>
-              mutate(CCBASIC2 = case_when(
-                  CCBASIC %in% c(1:8, 11:12) ~ 1, # Associates - Public
-                  CCBASIC %in% c(9:10, 13:14) ~ 2, # Associates - Private
-                  CCBASIC == 15 ~ 3, # Research University (Very High Activity)
-                  CCBASIC == 16 ~ 4, # Research University (High Activity)
-                  CCBASIC == 17 ~ 5, # Doctoral/Research University
-                  CCBASIC == 18 ~ 6, # Master’s (Large)
-                  CCBASIC == 19 ~ 7, # Master’s (Medium)
-                  CCBASIC == 20 ~ 8, # Master’s (Small)
-                  CCBASIC %in% c(21:23) ~ 9, # Baccalaureate Colleges
-                  CCBASIC == 24 ~ 10, # Faith-Related Institutions
-                  CCBASIC == 25 ~ 11, # Medical Schools
-                  CCBASIC == 26 ~ 12, # Other health profession schools
-                  CCBASIC == 27 ~ 13, # Engineering schools
-                  CCBASIC == 28 ~ 14, # Other tech-related schools
-                  CCBASIC == 29 ~ 15, # Business/Management Schools 
-                  CCBASIC == 30 ~ 16, # Art, Music, and Design Schools
-                  CCBASIC == 31 ~ 17, # Law Schools
-                  CCBASIC == 32 ~ 18, # Other special-focus institutions
-                  CCBASIC == 33 ~ 19, # Tribal colleges
-                  CCBASIC == -2 ~ NA, # Non-carnegie institutions
-                ),
-                FIPS = as.character(COUNTYCD),
-                FIPS = ifelse(nchar(FIPS) == 4, # Add leading zero to FIPS codes with 4 characters for merge
-                              paste0("0", FIPS),
-                              FIPS)) |>
-              select(UNITID, INSTNM, CITY, STABBR, HBCU, TRIBAL, CCBASIC2, COUNTYNM, LONGITUD, LATITUDE, ZIP, FIPS) |>
-              rename_all(tolower)
-              ) |>
+                ~ read_csv(unz(file.path(dat_dir,
+                                         "ipeds",
+                                         paste0("HD", .x, ".zip")),
+                               paste0(paste0("hd", .x, ".csv"))),
+                           show_col_types = FALSE) |>
+                  rename_all(tolower) |>
+                  ## subset
+                  select(unitid, heiname = instnm, heicity = city,
+                         heistate = stabbr,
+                         heizip = zip, fips = countycd,
+                         heilon = longitud, heilat = latitude,
+                         hbcu, tribal, ccbasic) |>
+                  ## add leading zero
+                  mutate(fips = sprintf("%05d", fips)) |>
+                  ## convert 1 Yes 2 No to 1 Yes 0 No
+                  mutate(hbcu = ifelse(hbcu == 2, 0, hbcu),
+                         tribal = ifelse(tribal == 2, 0, tribal)) |>
+                  ## recode carnegie basic
+                  mutate(ccb = case_when(
+                    ccbasic %in% c(1:8, 11:12) ~ 1, # associates - public
+                    ccbasic %in% c(9:10, 13:14) ~ 2, # associates - private
+                    ccbasic == 15 ~ 3, # research university (very high activity)
+                    ccbasic == 16 ~ 4, # research university (high activity)
+                    ccbasic == 17 ~ 5, # doctoral/research university
+                    ccbasic == 18 ~ 6, # master’s (large)
+                    ccbasic == 19 ~ 7, # master’s (medium)
+                    ccbasic == 20 ~ 8, # master’s (small)
+                    ccbasic %in% c(21:23) ~ 9, # baccalaureate colleges
+                    ccbasic == 24 ~ 10, # faith-related institutions
+                    ccbasic == 25 ~ 11, # medical schools
+                    ccbasic == 26 ~ 12, # other health profession schools
+                    ccbasic == 27 ~ 13, # engineering schools
+                    ccbasic == 28 ~ 14, # other tech-related schools
+                    ccbasic == 29 ~ 15, # business/management schools
+                    ccbasic == 30 ~ 16, # art, music, and design schools
+                    ccbasic == 31 ~ 17, # law schools
+                    ccbasic == 32 ~ 18, # other special-focus institutions
+                    ccbasic == 33 ~ 19, # tribal colleges
+                    ccbasic == -2 ~ NA  # non-carnegie institutions
+                  )) |>
+                  ## remove basic
+                  select(-ccbasic) |>
+                  ## add year
+                  mutate(year = .x) |>
+                  ## order vars
+                  select(year, everything())) |>
   bind_rows() |>
-  distinct() |>
-  arrange(stabbr, fips)
+  filter(heistate %in% pull(cw_st_app, stabbr)) |>
+  arrange(unitid, year)
 
 ## -----------------------------------------------------------------------------
 ## join BLS, poverty, appalachia, and state crosswalk data
@@ -222,13 +291,13 @@ df_ipeds <- map(award_period,
 df_eco <- df_bls |>
   left_join(df_pov, by = c("fips", "year")) |>
   left_join(df_arc, by = "fips") |>
-  left_join(df_ipeds, by = "fips") |> 
+  ## left_join(df_ipeds, by = c("fips", "year")) |>
   mutate(appalachia = ifelse(is.na(appalachia), 0, appalachia)) |>
   left_join(cw_ct, by = c("fips", "year")) |>
   mutate(stfips = substr(fips, 1, 2)) |>
   left_join(cw_st_app, by = c("stfips")) |>
-  select(fips, county = name, appalachia, stname, stabbr.y, year, unemp_rate, poverty_rate,
-         hbcu, tribal, ccbasic2) 
+  select(year, fips, county = name, appalachia, unemp_rate, poverty_rate) |>
+  mutate(county = str_remove_all(county, " County"))
 
 ## -----------------------------------------------------------------------------
 ## place applications in counties
@@ -265,13 +334,16 @@ df_grant <- df_grant |>
 ## join
 df <- df_grant |>
   left_join(df_eco, by = c("fips", "yearawarded" = "year")) |>
-  mutate(county = str_remove_all(county, " County")) |> # Remove 'county' in text
-  select(appnumber, institution, organizationtype, instcity, inststate, stname, county, appalachia, fips, zip, latitude, longitude, 
-         yearawarded, projecttitle, program, division, awardoutright, newdiscipline, primarydiscipline, disciplines, ziplon, ziplat,
-         lon, lat, unemp_rate, poverty_rate, hbcu, ccbasic2) # Select needed variables
+  left_join(cw_st_app |> select(stabbr, stname), by = c("inststate" = "stabbr")) |>
+  select(appnumber, institution, orgtype = organizationtype,
+         instcity, inststate, stname, county, appalachia, fips, zip,
+         lon, lat, yearawarded, title = projecttitle, program, division,
+         ao = awardoutright, newdiscipline, primarydiscipline,
+         disciplines, unemp_rate, poverty_rate)
 
 ## save
 write_csv(df, file.path(dat_dir, "analysis.csv"))
+write_csv(df_ipeds, file.path(dat_dir, "analysis_ipeds.csv"))
 
 ## -----------------------------------------------------------------------------
 ## end script
