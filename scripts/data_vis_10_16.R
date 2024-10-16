@@ -129,10 +129,6 @@ dev.off()
 ## Regional Maps
 ## -----------------------------------------------------------------------------
 
-## TODO 
-# Issue with duplicate county names in different states (i.e. Barbour Co in Alabama isn't in region
-# but Barbour Co. in WV is)... need to merge on FIPS somehow 
-
 ## NEH Funding in Appalachia (2018-2023) - APPENDIX
 
 # Subset main df to only Appalachia
@@ -147,7 +143,6 @@ ct_app <- st_ct_map |> # subset for all appalachian counties
   subset(region %in% unique(tolower(df_arc$state)) & 
            paste(region, subregion) %in% 
            paste(tolower(df_arc$state), tolower(df_arc$county)))
-
 
 # Plot 
 ggplot() +
