@@ -36,8 +36,24 @@ app_st <- c("AL", "GA", "KY", "MD", "MS", "NY", "NC", "OH", "PA", "SC", "TN",
 ## Analysis data frame
 ## -----------------------------------------------------------------------------
 
-df <- read_csv(file.path(dat_dir, "analysis.csv")) %>%
+df <- read_csv(file.path(dat_dir, "analysis.csv")) |>
   distinct()
+
+df_arc <- read_excel(list.files(file.path(dat_dir, "arc"), full.names = TRUE),
+                     skip = 4) |>
+  rename_all(tolower) |>
+  mutate(appalachia = 1) |>
+  mutate(county = case_when( # Fixing VA anomalies
+    county == "Alleghany + Covington city" ~ "Alleghany",
+    county == "Wise + Norton city" ~ "Wise",
+    county == "Washington + Bristol city" ~ "Washington",
+    county == "Carroll + Galax city" ~ "Carroll",
+    county == "Henry + Martinsville city" ~ "Henry",
+    county == "Montgomery + Radford city" ~ "Montgomery",
+    county == "Rockbridge + Buena Vista city + Lexington city" ~ "Rockbridge",
+    county == "St. Clair" ~ "St Clair",
+    .default = as.character(county)
+  ))
 
 ## -----------------------------------------------------------------------------
 ## Initial Trend Plots
@@ -45,10 +61,10 @@ df <- read_csv(file.path(dat_dir, "analysis.csv")) %>%
 
 ## Avg Poverty Rate
 png(file.path(fig_dir, "pov_rate.png"), res=100)
-df %>% 
-  subset(appalachia == 1) %>%
-  group_by(yearawarded) %>%
-  mutate(avg_pov = mean(poverty_rate, na.rm=T)) %>%
+df |> 
+  subset(appalachia == 1) |>
+  group_by(yearawarded) |>
+  mutate(avg_pov = mean(poverty_rate, na.rm=T)) |>
   ggplot(aes(x=yearawarded, y=avg_pov)) + 
     stat_smooth(color="black", linewidth=0.5, se=F, method = "loess") +
     scale_y_continuous(labels = scales::comma) + 
@@ -59,10 +75,10 @@ dev.off()
 
 ## Avg Unemployment Rate
 png(file.path(fig_dir, "unemp_rate.png"), res=90)
-df %>% 
-  subset(appalachia == 1) %>%
-  group_by(yearawarded) %>%
-  mutate(avg_unemp = mean(unemp_rate, na.rm=T)) %>%
+df |>
+  subset(appalachia == 1) |>
+  group_by(yearawarded) |>
+  mutate(avg_unemp = mean(unemp_rate, na.rm=T)) |>
   ggplot(aes(x=yearawarded, y=avg_unemp)) + 
     stat_smooth(color="black", linewidth=0.5, se=F, method = "loess") +
     scale_y_continuous(labels = scales::comma) + 
@@ -73,10 +89,10 @@ dev.off()
 
 ## Total NEH Awarded 
 png(file.path(fig_dir, "neh_awards.png"), res=90)
-df %>% 
-  subset(appalachia == 1) %>%
-  group_by(yearawarded) %>%
-  mutate(total_award = sum(awardoutright)) %>%
+df |>
+  subset(appalachia == 1) |>
+  group_by(yearawarded) |>
+  mutate(total_award = sum(ao)) |>
   ggplot(aes(x=yearawarded, y=total_award)) + 
     stat_smooth(color="black", linewidth=0.5, se=F, method = "loess") +
     scale_y_continuous(labels = scales::comma) + 
@@ -87,9 +103,9 @@ dev.off()
 
 ## Poverty Rate & NEH Funding
 png(file.path(fig_dir, "poverty_awards.png"), res=90)
-df %>% 
-  subset(appalachia == 1) %>%
-  ggplot(aes(x=poverty_rate, y=awardoutright)) + 
+df |>
+  subset(appalachia == 1) |>
+  ggplot(aes(x=poverty_rate, y=ao)) + 
     geom_bar(fill="slateblue", stat="identity", width=0.6, alpha=0.4) +
     scale_y_continuous(labels = scales::comma) + 
     labs(y="NEH Funding", x="Poverty Rate (%)", 
@@ -99,9 +115,9 @@ dev.off()
 
 ## Unemployment Rate & NEH Funding
 png(file.path(fig_dir, "unemp_awards.png"), res=90)
-df %>% 
-  subset(appalachia == 1) %>%
-  ggplot(aes(x=unemp_rate, y=awardoutright)) + 
+df |>
+  subset(appalachia == 1) |>
+  ggplot(aes(x=unemp_rate, y=ao)) + 
     geom_bar(fill="slateblue", stat="identity", width=0.4, alpha=0.4) +
     scale_y_continuous(labels = scales::comma) + 
     labs(y="NEH Funding", x="Unemployment Rate (%)", 
@@ -113,12 +129,37 @@ dev.off()
 ## Regional Maps
 ## -----------------------------------------------------------------------------
 
+## TODO 
+# Issue with duplicate county names in different states (i.e. Barbour Co in Alabama isn't in region
+# but Barbour Co. in WV is)... need to merge on FIPS somehow 
+
 ## NEH Funding in Appalachia (2018-2023) - APPENDIX
 
+# Subset main df to only Appalachia
+df_app <- df |>
+  subset(appalachia == 1)
 
+# Get the state & counties boundaries data from the maps package
+st_app <- map_data("state", region = tolower(df_app$stname)) # State boundaries separate
+st_ct_map <- map_data("county", region=tolower(df_app$stname)) # State & county boundaries
+ct_app <- st_ct_map |> # subset for all appalachian counties
+  group_by(region, subregion) |>
+  subset(region %in% unique(tolower(df_arc$state)) & 
+           paste(region, subregion) %in% 
+           paste(tolower(df_arc$state), tolower(df_arc$county)))
+
+
+# Plot 
+ggplot() +
+  geom_polygon(data = st_ct_map, aes(x = long, y = lat, group = group),  # Add county boundaries
+               fill = "white", color = "black", size = 0.2) +
+  geom_polygon(data = ct_app, aes(x = long, y = lat, group = group),  # Add counties in region
+               fill = "lightblue", color = "black", size = 0.2) +
+  geom_polygon(data = st_app, aes(x = long, y = lat, group = group),  # Add state boundaries
+               fill = NA, color = "black", size = 0.5) +
+  theme_void()
 
 ## Appalachia Average Poverty Rate (2018-2022) - APPENDIX
-
 
 
 ## Appalachia Average Unemployment Rate (2018-2023) - APPENDIX
@@ -129,14 +170,14 @@ dev.off()
 ## -----------------------------------------------------------------------------
 
 ## Award Overview
-summary_table <- df %>%
-  subset(appalachia == 1) %>%
+summary_table <- df |>
+  subset(appalachia == 1) |>
   summarise(
     Total_Grants = n(),
     Total_Amount = sum(ao, na.rm = TRUE),
     Average_Amount = mean(ao, na.rm = TRUE),
     Max_Amount = max(ao, na.rm = TRUE)
-  ) %>%
+  ) |>
   select(Total_Grants, Total_Amount, Average_Amount, Max_Amount)
 
 summary_table$Total_Amount <- paste('$',formatC(summary_table$Total_Amount, big.mark=',', format = 'f', digits=2))
@@ -148,10 +189,10 @@ summary_table[] <- lapply(summary_table, as.character)
 print(summary_table)
 
 ## Disciplines Overview
-disc_table <- df %>%
-  subset(appalachia == 1) %>%
-  group_by(newdiscipline) %>%
-  summarise(Count = n(), Awarded = sum(ao)) %>%
+disc_table <- df |>
+  subset(appalachia == 1) |>
+  group_by(newdiscipline) |>
+  summarise(Count = n(), Awarded = sum(ao)) |>
   arrange(desc(Count))
 
 disc_table$Awarded <- paste('$',formatC(disc_table$Awarded, big.mark=',', format = 'f', digits=2))
@@ -159,11 +200,11 @@ disc_table$Awarded <- paste('$',formatC(disc_table$Awarded, big.mark=',', format
 print(disc_table)
 
 ## Division Overview
-div_table <- df %>%
-  subset(appalachia == 1) %>%
-  group_by(division) %>%
-  summarise(Count = n(), Awarded = sum(ao)) %>%
-  arrange(desc(Count)) %>%
+div_table <- df |>
+  subset(appalachia == 1) |>
+  group_by(division) |>
+  summarise(Count = n(), Awarded = sum(ao)) |>
+  arrange(desc(Count)) |>
   head(5)
 
 div_table$Awarded <- paste('$',formatC(div_table$Awarded, big.mark=',', format = 'f', digits=2))
@@ -171,10 +212,10 @@ div_table$Awarded <- paste('$',formatC(div_table$Awarded, big.mark=',', format =
 print(div_table)
 
 ## Organizations Overview
-org_table <- df %>%
-  subset(appalachia == 1) %>%
-  group_by(orgtype) %>%
-  summarise(Count = n(), Awarded = sum(ao)) %>%
+org_table <- df |>
+  subset(appalachia == 1) |>
+  group_by(orgtype) |>
+  summarise(Count = n(), Awarded = sum(ao)) |>
   arrange(desc(Awarded))
 
 org_table$Awarded <- paste('$',formatC(org_table$Awarded, big.mark=',', format = 'f', digits=2))
@@ -182,9 +223,9 @@ org_table$Awarded <- paste('$',formatC(org_table$Awarded, big.mark=',', format =
 print(org_table)
 
 ## IPEDS Overview
-ipeds_table <- df %>%
-  subset(appalachia == 1) %>%
-  drop_na(ccb) %>%
+ipeds_table <- df |>
+  subset(appalachia == 1) |>
+  drop_na(ccb) |>
   mutate(ccnames = case_when(
     ccb == 1 ~ "Associate’s - Public", 
     ccb == 2 ~ "Associate’s - Private",
@@ -205,9 +246,9 @@ ipeds_table <- df %>%
     ccb == 17 ~ "Law Schools",
     ccb == 18 ~ "Other Special-Focus Institutions",
     ccb == 19 ~ "Tribal Colleges"
-  )) %>%
-  group_by(ccnames) %>% 
-  summarise(Count = n(), Awarded = sum(ao)) %>%
+  )) |>
+  group_by(ccnames) |>
+  summarise(Count = n(), Awarded = sum(ao)) |>
   arrange(desc(Awarded))
 
 ipeds_table$Awarded <- paste('$',formatC(ipeds_table$Awarded, big.mark=',', format = 'f', digits=2))
@@ -215,10 +256,10 @@ ipeds_table$Awarded <- paste('$',formatC(ipeds_table$Awarded, big.mark=',', form
 print(ipeds_table)
 
 ## HBCU Overview
-hbcu_table <- df %>%
-  subset(hbcu == 1 & appalachia == 1) %>%
+hbcu_table <- df |>
+  subset(hbcu == 1 & appalachia == 1) |>
   group_by(hbcu) %>% # need to add in HBCU and Tribals
-  summarise(Count = n(), Awarded = sum(ao)) %>%
+  summarise(Count = n(), Awarded = sum(ao)) |>
   arrange(desc(Awarded))
 
 hbcu_table$Awarded <- paste('$',formatC(hbcu_table$Awarded, big.mark=',', format = 'f', digits=2))
