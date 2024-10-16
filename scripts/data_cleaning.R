@@ -297,6 +297,7 @@ df_eco <- df_bls |>
   select(year, fips, county = name, appalachia, unemp_rate, poverty_rate) |>
   mutate(county = str_remove_all(county, " County"))
 
+
 ## -----------------------------------------------------------------------------
 ## place applications in counties
 ## -----------------------------------------------------------------------------
