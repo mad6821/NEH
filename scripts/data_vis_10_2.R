@@ -133,9 +133,9 @@ summary_table <- df %>%
   subset(appalachia == 1) %>%
   summarise(
     Total_Grants = n(),
-    Total_Amount = sum(awardoutright, na.rm = TRUE),
-    Average_Amount = mean(awardoutright, na.rm = TRUE),
-    Max_Amount = max(awardoutright, na.rm = TRUE)
+    Total_Amount = sum(ao, na.rm = TRUE),
+    Average_Amount = mean(ao, na.rm = TRUE),
+    Max_Amount = max(ao, na.rm = TRUE)
   ) %>%
   select(Total_Grants, Total_Amount, Average_Amount, Max_Amount)
 
@@ -151,7 +151,7 @@ print(summary_table)
 disc_table <- df %>%
   subset(appalachia == 1) %>%
   group_by(newdiscipline) %>%
-  summarise(Count = n(), Awarded = sum(awardoutright)) %>%
+  summarise(Count = n(), Awarded = sum(ao)) %>%
   arrange(desc(Count))
 
 disc_table$Awarded <- paste('$',formatC(disc_table$Awarded, big.mark=',', format = 'f', digits=2))
@@ -162,7 +162,7 @@ print(disc_table)
 div_table <- df %>%
   subset(appalachia == 1) %>%
   group_by(division) %>%
-  summarise(Count = n(), Awarded = sum(awardoutright)) %>%
+  summarise(Count = n(), Awarded = sum(ao)) %>%
   arrange(desc(Count)) %>%
   head(5)
 
@@ -173,8 +173,8 @@ print(div_table)
 ## Organizations Overview
 org_table <- df %>%
   subset(appalachia == 1) %>%
-  group_by(organizationtype) %>%
-  summarise(Count = n(), Awarded = sum(awardoutright)) %>%
+  group_by(orgtype) %>%
+  summarise(Count = n(), Awarded = sum(ao)) %>%
   arrange(desc(Awarded))
 
 org_table$Awarded <- paste('$',formatC(org_table$Awarded, big.mark=',', format = 'f', digits=2))
@@ -184,30 +184,30 @@ print(org_table)
 ## IPEDS Overview
 ipeds_table <- df %>%
   subset(appalachia == 1) %>%
-  drop_na(ccbasic2) %>%
+  drop_na(ccb) %>%
   mutate(ccnames = case_when(
-    ccbasic2 == 1 ~ "Associate’s - Public", 
-    ccbasic2 == 2 ~ "Associate’s - Private",
-    ccbasic2 == 3 ~ "Research University (Very High)",
-    ccbasic2 == 4 ~ "Research University (High)",
-    ccbasic2 == 5 ~ "Doctoral/Research University",
-    ccbasic2 == 6 ~ "Master’s (Large)",
-    ccbasic2 == 7 ~ "Master’s (Medium)",
-    ccbasic2 == 8 ~ "Master’s (Small)",
-    ccbasic2 == 9 ~ "Baccalaureate Colleges",
-    ccbasic2 == 10 ~ "Faith-Related Institutions",
-    ccbasic2 == 11 ~ "Medical Schools",
-    ccbasic2 == 12 ~ "Other health profession schools",
-    ccbasic2 == 13 ~ "Engineering Schools",
-    ccbasic2 == 14 ~ "Other tech-related schools",
-    ccbasic2 == 15 ~ "Business/Management Schools",
-    ccbasic2 == 16 ~ "Art, Music, and Design Schools",
-    ccbasic2 == 17 ~ "Law Schools",
-    ccbasic2 == 18 ~ "Other Special-Focus Institutions",
-    ccbasic2 == 19 ~ "Tribal Colleges"
+    ccb == 1 ~ "Associate’s - Public", 
+    ccb == 2 ~ "Associate’s - Private",
+    ccb == 3 ~ "Research University (Very High)",
+    ccb == 4 ~ "Research University (High)",
+    ccb == 5 ~ "Doctoral/Research University",
+    ccb == 6 ~ "Master’s (Large)",
+    ccb == 7 ~ "Master’s (Medium)",
+    ccb == 8 ~ "Master’s (Small)",
+    ccb == 9 ~ "Baccalaureate Colleges",
+    ccb == 10 ~ "Faith-Related Institutions",
+    ccb == 11 ~ "Medical Schools",
+    ccb == 12 ~ "Other health profession schools",
+    ccb == 13 ~ "Engineering Schools",
+    ccb == 14 ~ "Other tech-related schools",
+    ccb == 15 ~ "Business/Management Schools",
+    ccb == 16 ~ "Art, Music, and Design Schools",
+    ccb == 17 ~ "Law Schools",
+    ccb == 18 ~ "Other Special-Focus Institutions",
+    ccb == 19 ~ "Tribal Colleges"
   )) %>%
-  group_by(ccnames) %>% # need to add in HBCU and Tribals
-  summarise(Count = n(), Awarded = sum(awardoutright)) %>%
+  group_by(ccnames) %>% 
+  summarise(Count = n(), Awarded = sum(ao)) %>%
   arrange(desc(Awarded))
 
 ipeds_table$Awarded <- paste('$',formatC(ipeds_table$Awarded, big.mark=',', format = 'f', digits=2))
@@ -218,7 +218,7 @@ print(ipeds_table)
 hbcu_table <- df %>%
   subset(hbcu == 1 & appalachia == 1) %>%
   group_by(hbcu) %>% # need to add in HBCU and Tribals
-  summarise(Count = n(), Awarded = sum(awardoutright)) %>%
+  summarise(Count = n(), Awarded = sum(ao)) %>%
   arrange(desc(Awarded))
 
 hbcu_table$Awarded <- paste('$',formatC(hbcu_table$Awarded, big.mark=',', format = 'f', digits=2))
