@@ -7,20 +7,6 @@
 ##
 ## -----------------------------------------------------------------------------
 
-## TODO
-## 1. Pull out distinct institutions from grants data and save to csv
-##    - institution name, city, state, zip
-
-## 2. Look for HEIs and likely HEIs (e.g., Georgia Research Foundation) and
-##    associate UNITIDs from IPEDS with them (add as column)
-## 3. Save crosswalk with institution name (as in grants data) and UNITID
-##    - alternatively, leave all columns, but we'll just read in the two
-## 4. Add code in this script to
-##    - read in crosswalk
-##    - left_join() to grants data on name
-##    - left_join() to IPEDS data on UNITID
-## 5. Remove analysis_ipeds.csv save (no longer necessary)
-
 ## libraries
 libs <- c("tidyverse", "readxl", "sf", "crosswalkr")
 sapply(libs, require, character.only = TRUE)
@@ -259,12 +245,11 @@ df_ipeds <- map(award_period,
                          heistate = stabbr,
                          heizip = zip, fips = countycd,
                          heilon = longitud, heilat = latitude,
-                         hbcu, tribal, ccbasic) |>
+                         hbcu, ccbasic) |>
                   ## add leading zero
                   mutate(fips = sprintf("%05d", fips)) |>
                   ## convert 1 Yes 2 No to 1 Yes 0 No
-                  mutate(hbcu = ifelse(hbcu == 2, 0, hbcu),
-                         tribal = ifelse(tribal == 2, 0, tribal)) |>
+                  mutate(hbcu = ifelse(hbcu == 2, 0, hbcu)) |>
                   ## recode carnegie basic
                   mutate(ccb = case_when(
                     ccbasic %in% c(1:8, 11:12) ~ 1, # associates - public
@@ -305,7 +290,6 @@ df_ipeds <- map(award_period,
 df_eco <- df_bls |>
   left_join(df_pov, by = c("fips", "year")) |>
   left_join(df_arc, by = "fips") |>
-  ## left_join(df_ipeds, by = c("fips", "year")) |>
   mutate(appalachia = ifelse(is.na(appalachia), 0, appalachia)) |>
   left_join(cw_ct, by = c("fips", "year")) |>
   mutate(stfips = substr(fips, 1, 2)) |>
@@ -342,14 +326,43 @@ df_grant <- df_grant |>
   left_join(df_grant_fips, by = "appnumber")
 
 ## -----------------------------------------------------------------------------
+## Crosswalk with NEH and IPEDS data
+## -----------------------------------------------------------------------------
+
+## make a UNITID crosswalk for use & save csv
+cw_unitid <- df_ipeds |> select(heiname, unitid) |> distinct()
+write_csv(cw_unitid, file.path(dat_dir, "cw_unitid.csv"))
+
+## Pull out distinct institutions from grant data & save csv
+df_grant_hei <- df_grant |>
+  select(institution, instcity, inststate, zip) |>
+  distinct()
+write_csv(df_grant_hei, file.path(dat_dir, "df_grant_hei.csv"))
+
+## read in NEH/UNITID data - manually added UNITID to NEH data
+df_neh_unitid <- read_csv(file.path(dat_dir, "clean_neh_unitid.csv"),
+                          show_col_types = FALSE,
+                          col_select = c(institution, unitid, instcity)) |>
+  drop_na() |>
+  distinct(institution, instcity, unitid)
+
+## Join UNITID into NEH grant data
+df_grant_unitid <- df_grant |>
+  left_join(df_neh_unitid, by = c("institution", "instcity"))
+
+## Join NEH data and ipeds
+df_grant_ipeds <- df_grant_unitid |>
+  left_join(df_ipeds, by = c("unitid", "fips", "yearawarded" = "year"))
+
+## -----------------------------------------------------------------------------
 ## join final data set and save
 ## -----------------------------------------------------------------------------
 
 ## join
-df <- df_grant |>
+df <- df_grant_ipeds |>
   left_join(df_eco, by = c("fips", "yearawarded" = "year")) |>
   left_join(cw_st_app |> select(stabbr, stname), by = c("inststate" = "stabbr")) |>
-  select(appnumber, institution, orgtype = organizationtype,
+  select(appnumber, unitid, institution, orgtype = organizationtype, ccb, hbcu,
          instcity, inststate, stname, county, appalachia, fips, zip,
          lon, lat, yearawarded, title = projecttitle, program, division,
          ao = awardoutright, newdiscipline, primarydiscipline,
@@ -357,7 +370,6 @@ df <- df_grant |>
 
 ## save
 write_csv(df, file.path(dat_dir, "analysis.csv"))
-write_csv(df_ipeds, file.path(dat_dir, "analysis_ipeds.csv"))
 
 ## -----------------------------------------------------------------------------
 ## end script
