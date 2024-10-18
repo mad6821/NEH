@@ -3,7 +3,7 @@
 ## [ PROJ ] Appalachian funding
 ## [ FILE ] data_cleaning.R
 ## [ AUTH ] Benjamin Skinner; bskinner@neh.gov & Maya Dalton; mdalton@neh.gov
-## [ INIT ] 09 October 2024
+## [ INIT ] 18 October 2024
 ##
 ## -----------------------------------------------------------------------------
 
@@ -175,6 +175,9 @@ df_grant <- df_grant |>
 ## filter our humanities councils
 df_grant <- df_grant |>
   filter(!grepl("Humanities Council", organizationtype))
+
+## TODO: some of the challenge programs receive $0 in award outright,
+## so need to either pull matching or original amount. 
 
 ## -----------------------------------------------------------------------------
 ## Cleaning, subsetting BLS economic data for Appalachian States and merging

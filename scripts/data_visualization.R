@@ -8,18 +8,8 @@
 ## -----------------------------------------------------------------------------
 
 ## libraries
-<<<<<<< HEAD
-<<<<<<< HEAD
-libs <- c("tidyverse", "readr", "sf", "usmap", "maps", 
-          "formattable", "crosswalkr", "plyr", "plotly", "ggplot2",
-          "readxl")
+libs <- c("tidyverse", "sf", "plotly", "readxl")
 
-=======
-libs <- c("tidyverse", "sf", "plotly")
->>>>>>> 0d31f8e05d7a77c0a55c2aa162d8ec061ee5c2ee
-=======
-libs <- c("tidyverse", "sf", "plotly")
->>>>>>> 0d31f8e05d7a77c0a55c2aa162d8ec061ee5c2ee
 sapply(libs, require, character.only = TRUE)
 
 ## paths (./scripts as working directory)
@@ -45,7 +35,8 @@ app_st <- c("AL", "GA", "KY", "MD", "MS", "NY", "NC", "OH", "PA", "SC", "TN",
 ## Analysis data frame
 ## -----------------------------------------------------------------------------
 
-df <- read_csv(file.path(dat_dir, "analysis.csv"))
+df <- read_csv(file.path(dat_dir, "analysis.csv")) %>%
+  distinct() # need distinct obs, because there are some duplicates
 
 df_arc <- read_excel(list.files(file.path(dat_dir, "arc"), full.names = TRUE),
                      skip = 4) |>
@@ -84,7 +75,7 @@ g <- df |>
   theme_minimal() +
   theme(panel.grid.minor.x = element_blank())
 
-ggsave(filename = file.path(fig_dir, "pov_rate.pdf"),
+ggsave(filename = file.path(fig_dir, "pov_rate.png"),
        g,
        units = "in",
        height = 4,
@@ -102,62 +93,94 @@ g <- df |>
   ggplot(aes(x = yearawarded, y = avg_unemp)) +
   stat_smooth(color = "black", linewidth = 0.5, se = FALSE, method = "loess") +
   scale_y_continuous(labels = scales::label_percent(scale = 1)) +
-  labs( = "Year",
+  labs(x = "Year",
        y = "Avg. Unemployment Rate (%)",
        title = "Appalachian Unemployment Rate Over Time") +
   theme_minimal() +
   theme(panel.grid.minor.x = element_blank())
 
-ggsave(filename = file.path(fig_dir, "unemp_rate.pdf"),
+ggsave(filename = file.path(fig_dir, "unemp_rate.png"),
        g,
        units = "in",
        height = 4,
        width = 6,
        dpi = "retina")
 
-## Total NEH Awarded 
-png(file.path(fig_dir, "neh_awards.png"), res=90)
-df |>
-  subset(appalachia == 1) |>
+## -------------------------------------
+## total NEH awarded 
+## -------------------------------------
+
+g <- df |>
+  filter(appalachia == 1) |>
   group_by(yearawarded) |>
   mutate(total_award = sum(ao)) |>
-  ggplot(aes(x=yearawarded, y=total_award)) + 
-    stat_smooth(color="black", linewidth=0.5, se=F, method = "loess") +
-    scale_y_continuous(labels = scales::comma) + 
-    labs(x="Year", y="Total NEH Awarded (USD)", 
-         title="Figure 2. NEH Awards to Appalachia Over Time") +
-    theme_minimal()
-dev.off()
+  ggplot(aes(x = yearawarded, y = total_award)) +
+  stat_smooth(color = "black", linewidth = 0.5, se = F, method = "loess") +
+  scale_y_continuous(labels = scales::label_comma(scale = 1)) +
+  labs(x = "Year",
+       y = "Total NEH Awarded (USD)",
+       title = "NEH Awards to Appalachia Over Time") +
+  theme_minimal() +
+  theme(panel.grid.minor.x = element_blank())
 
-## Poverty Rate & NEH Funding
-png(file.path(fig_dir, "poverty_awards.png"), res=90)
-df |>
-  subset(appalachia == 1) |>
+ggsave(filename = file.path(fig_dir, "neh_awards.png"),
+       g,
+       units = "in",
+       height = 4,
+       width = 6,
+       dpi = "retina")
+
+## -------------------------------------
+## poverty rate and NEH funding
+## -------------------------------------
+
+g <- df |>
+  filter(appalachia == 1) |>
   ggplot(aes(x=poverty_rate, y=ao)) +
   geom_bar(fill="slateblue", stat="identity", width=0.6, alpha=0.4) +
-  scale_y_continuous(labels = scales::comma) +
-  labs(y="NEH Funding", x="Poverty Rate (%)",
-       title="Figure 3a. NEH Funding and Poverty Rates\nin Appalachia") +
-  theme_minimal()
-dev.off()
+  scale_y_continuous(labels = scales::label_comma(scale = 1)) +
+  scale_x_continuous(labels = scales::label_percent(scale = 1)) +
+  labs(x = "Poverty Rate (%)",
+       y = "Total NEH Awarded (USD)",
+       title = "NEH Funding and Poverty Rates in Appalachia") +
+  theme_minimal() +
+  theme(panel.grid.minor.x = element_blank())
 
-## Unemployment Rate & NEH Funding
-png(file.path(fig_dir, "unemp_awards.png"), res=90)
-df |>
-  subset(appalachia == 1) |>
+ggsave(filename = file.path(fig_dir, "poverty_awards.png"),
+       g,
+       units = "in",
+       height = 4,
+       width = 6,
+       dpi = "retina")
+
+## -------------------------------------
+## unemployment rates and NEH funding
+## -------------------------------------
+
+g <- df |>
+  filter(appalachia == 1) |>
   ggplot(aes(x=unemp_rate, y=ao)) +
-  geom_bar(fill="slateblue", stat="identity", width=0.4, alpha=0.4) +
-  scale_y_continuous(labels = scales::comma) +
-  labs(y="NEH Funding", x="Unemployment Rate (%)",
-       title="Figure 3b. NEH Funding and Unemployment Rates\nin Appalachia") +
-  theme_minimal()
-dev.off()
+  geom_bar(fill="slateblue", stat="identity", width=0.6, alpha=0.4) +
+  scale_y_continuous(labels = scales::label_comma(scale = 1)) +
+  scale_x_continuous(labels = scales::label_percent(scale = 1)) +
+  labs(x = "Poverty Rate (%)",
+       y = "Total NEH Awarded (USD)",
+       title = "NEH Funding and Unemployment Rates in Appalachia") +
+  theme_minimal() +
+  theme(panel.grid.minor.x = element_blank())
+
+ggsave(filename = file.path(fig_dir, "unemp_awards.png"),
+       g,
+       units = "in",
+       height = 4,
+       width = 6,
+       dpi = "retina")
 
 ## -----------------------------------------------------------------------------
 ## Regional Maps
 ## -----------------------------------------------------------------------------
 
-# Subset main df to only Appalachia
+# Subset main df to only Appalachia & make some variables
 df_app <- df |>
   subset(appalachia == 1) |>
   group_by(county, stname) |>
@@ -181,9 +204,10 @@ ct_app <- st_ct_map |> # subset for all appalachian counties in ARC
 df_app_ct <- left_join(ct_app, df_app, by=c("region", "subregion")) %>%
   drop_na(ao) 
 
-## NEH Funding in Appalachia (2018-2023) - APPENDIX
-png(file.path(fig_dir, "neh_map.png"), width = 5.5, height = 5, units = "in", res=1200)
-ggplot() +
+## -------------------------------------
+## NEH Funding (2018-2023) - APPENDIX
+## -------------------------------------
+g <- ggplot() +
   geom_polygon(data = st_ct_map, aes(x = long, y = lat, group = group),  # Add county boundaries
                fill = "white", color = "black", size = 0.2) +
   geom_polygon(data = ct_app, aes(x = long, y = lat, group = group),  # Add counties in region
@@ -194,14 +218,23 @@ ggplot() +
                                      fill=as.numeric(total_award)), 
                color="black", size = 0.2, alpha=0.8) +
   scale_fill_distiller(type = "seq", palette = "Reds", labels=scales::label_comma()) + 
-  labs(title="Figure 4. Appalachian Counties with NEH Funding", fill="Award Amount")+
+  labs(title="Appalachian Counties with NEH Funding", 
+       fill="Award Amount")+
   ggthemes::theme_map()+
   theme(legend.position = "right")
-dev.off()
 
-## Appalachia Average Poverty Rate (2018-2022) - APPENDIX
-png(file.path(fig_dir, "poverty_map.png"), width = 5.5, height = 5, units = "in", res=1200)
-ggplot() +
+ggsave(filename = file.path(fig_dir, "neh_map.png"),
+       g,
+       units = "in",
+       height = 5,
+       width = 6,
+       dpi = "retina")
+
+## -------------------------------------
+## Avg Poverty Rate (2018-2022) 
+## -------------------------------------
+
+g <- ggplot() +
   geom_polygon(data = st_ct_map, aes(x = long, y = lat, group = group),  # Add county boundaries
                fill = "white", color = "black", size = 0.2) +
   geom_polygon(data = ct_app, aes(x = long, y = lat, group = group),  # Add counties in region
@@ -211,15 +244,23 @@ ggplot() +
   geom_polygon(data = df_app_ct, aes(x = long, y = lat.x, group=group, # Add NEH funding fill
                                      fill=as.numeric(avg_pov)), 
                color="black", size = 0.2, alpha=0.8) +
-  scale_fill_distiller(type = "seq", palette = "Reds") + 
-  labs(title="Figure 5. Appalachian Poverty Rates", fill="Poverty Rate")+
+  scale_fill_distiller(type = "seq", palette = "Reds", labels = scales::label_percent(scale = 1)) + 
+  labs(title="Appalachian Poverty Rates", fill="Poverty Rate")+
   ggthemes::theme_map()+
   theme(legend.position = "right")
-dev.off()
 
-## Appalachia Average Unemployment Rate (2018-2023) - APPENDIX
-png(file.path(fig_dir, "unemp_map.png"), width = 5.5, height = 5, units = "in", res=1200)
-ggplot() +
+ggsave(filename = file.path(fig_dir, "poverty_map.png"),
+       g,
+       units = "in",
+       height = 5,
+       width = 6,
+       dpi = "retina")
+
+## -------------------------------------
+## Avg Unemployment Rate (2018-2022) 
+## -------------------------------------
+
+g <- ggplot() +
   geom_polygon(data = st_ct_map, aes(x = long, y = lat, group = group),  # Add county boundaries
                fill = "white", color = "black", size = 0.2) +
   geom_polygon(data = ct_app, aes(x = long, y = lat, group = group),  # Add counties in region
@@ -229,17 +270,25 @@ ggplot() +
   geom_polygon(data = df_app_ct, aes(x = long, y = lat.x, group=group, # Add NEH funding fill
                                      fill=as.numeric(avg_unemp)), 
                color="black", size = 0.2, alpha=0.8) +
-  scale_fill_distiller(type = "seq", palette = "Reds") + 
-  labs(title="Figure 6. Appalachian Unemployment Rates", fill="Unemployment Rate")+
+  scale_fill_distiller(type = "seq", palette = "Reds", labels = scales::label_percent(scale = 1)) + 
+  labs(title="Appalachian Unemployment Rates", fill="Unemployment Rate")+
   ggthemes::theme_map()+
   theme(legend.position = "right")
-dev.off()
+
+ggsave(filename = file.path(fig_dir, "unemp_map.png"),
+       g,
+       units = "in",
+       height = 5,
+       width = 6,
+       dpi = "retina")
 
 ## -----------------------------------------------------------------------------
 ## Summary Tables
 ## -----------------------------------------------------------------------------
 
-## Award Overview
+## -------------------------------------
+## Award Overview 
+## ------------------------------------
 summary_table <- df |>
   subset(appalachia == 1) |>
   summarise(
@@ -248,55 +297,63 @@ summary_table <- df |>
     Average_Amount = mean(ao, na.rm = TRUE),
     Max_Amount = max(ao, na.rm = TRUE)
   ) |>
-  select(Total_Grants, Total_Amount, Average_Amount, Max_Amount)
-
-summary_table$Total_Amount <- paste('$',formatC(summary_table$Total_Amount, big.mark=',', format = 'f', digits=2))
-summary_table$Average_Amount <- paste('$',formatC(summary_table$Average_Amount, big.mark=',', format = 'f', digits=2))
-summary_table$Max_Amount <- paste('$',formatC(summary_table$Max_Amount, big.mark=',', format = 'f', digits=2))
+  select(Total_Grants, Total_Amount, Average_Amount, Max_Amount) |> 
+  mutate(Total_Amount = paste('$',formatC(Total_Amount, big.mark=',', format = 'f', digits=2)),
+         Average_Amount = paste('$',formatC(Average_Amount, big.mark=',', format = 'f', digits=2)),
+         Max_Amount = paste('$',formatC(Max_Amount, big.mark=',', format = 'f', digits=2)))
 
 colnames(summary_table) <- c("Total Grants", "Total Awarded", "Average", "Max")
 summary_table[] <- lapply(summary_table, as.character)
 print(summary_table)
 
-## Disciplines Overview
+## -------------------------------------
+## Disciplines Overview 
+## ------------------------------------
+
 disc_table <- df |>
   subset(appalachia == 1) |>
   group_by(newdiscipline) |>
   summarise(Count = n(), Awarded = sum(ao)) |>
-  arrange(desc(Count))
-
-disc_table$Awarded <- paste('$',formatC(disc_table$Awarded, big.mark=',', format = 'f', digits=2))
+  arrange(desc(Count)) |> 
+  mutate(Awarded = paste('$',formatC(Awarded, big.mark=',', format = 'f', digits=2)))
 
 print(disc_table)
 
-## Division Overview
+## -------------------------------------
+## Divisions Overview 
+## ------------------------------------
+
 div_table <- df |>
   subset(appalachia == 1) |>
   group_by(division) |>
   summarise(Count = n(), Awarded = sum(ao)) |>
   arrange(desc(Count)) |>
-  head(5)
-
-div_table$Awarded <- paste('$',formatC(div_table$Awarded, big.mark=',', format = 'f', digits=2))
+  mutate(Awarded = paste('$',formatC(Awarded, big.mark=',', format = 'f', digits=2)))
 
 print(div_table)
 
-## Organizations Overview
+## -------------------------------------
+## Organizations Overview 
+## ------------------------------------
+
+## TODO: should college and universities be removed from this since we have the ipeds table? 
 org_table <- df |>
   subset(appalachia == 1) |>
   group_by(orgtype) |>
   summarise(Count = n(), Awarded = sum(ao)) |>
-  arrange(desc(Awarded))
-
-org_table$Awarded <- paste('$',formatC(org_table$Awarded, big.mark=',', format = 'f', digits=2))
+  arrange(desc(Awarded)) |>
+  mutate(Awarded = paste('$',formatC(Awarded, big.mark=',', format = 'f', digits=2)))
 
 print(org_table)
 
-## IPEDS Overview
+## -------------------------------------
+## IPEDS HEI Overview 
+## ------------------------------------
+
 ipeds_table <- df |>
   subset(appalachia == 1) |>
   drop_na(ccb) |>
-  mutate(ccnames = case_when(
+  mutate(ccnames = case_when( # Only coded the HEIs we actually have
     ccb == 1 ~ "Associate’s - Public", 
     ccb == 2 ~ "Associate’s - Private",
     ccb == 3 ~ "Research University (Very High)",
@@ -306,32 +363,24 @@ ipeds_table <- df |>
     ccb == 7 ~ "Master’s (Medium)",
     ccb == 8 ~ "Master’s (Small)",
     ccb == 9 ~ "Baccalaureate Colleges",
-    ccb == 10 ~ "Faith-Related Institutions",
-    ccb == 11 ~ "Medical Schools",
-    ccb == 12 ~ "Other health profession schools",
-    ccb == 13 ~ "Engineering Schools",
-    ccb == 14 ~ "Other tech-related schools",
-    ccb == 15 ~ "Business/Management Schools",
-    ccb == 16 ~ "Art, Music, and Design Schools",
-    ccb == 17 ~ "Law Schools",
-    ccb == 18 ~ "Other Special-Focus Institutions",
-    ccb == 19 ~ "Tribal Colleges"
+    .default = as.character(ccb)
   )) |>
   group_by(ccnames) |>
   summarise(Count = n(), Awarded = sum(ao)) |>
-  arrange(desc(Awarded))
-
-ipeds_table$Awarded <- paste('$',formatC(ipeds_table$Awarded, big.mark=',', format = 'f', digits=2))
+  arrange(desc(Awarded)) |>
+  mutate(Awarded = paste('$',formatC(Awarded, big.mark=',', format = 'f', digits=2)))
 
 print(ipeds_table)
 
-## HBCU Overview
+## -------------------------------------
+## HBCU HEI Overview 
+## ------------------------------------
+
 hbcu_table <- df |>
   subset(hbcu == 1 & appalachia == 1) |>
   group_by(hbcu) %>% # need to add in HBCU and Tribals
   summarise(Count = n(), Awarded = sum(ao)) |>
-  arrange(desc(Awarded))
-
-hbcu_table$Awarded <- paste('$',formatC(hbcu_table$Awarded, big.mark=',', format = 'f', digits=2))
+  arrange(desc(Awarded)) |>
+  mutate(Awarded = paste('$',formatC(Awarded, big.mark=',', format = 'f', digits=2)))
 
 print(hbcu_table[,2:3])
