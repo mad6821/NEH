@@ -3,14 +3,19 @@
 ## [ PROJ ] Appalachian funding
 ## [ FILE ] data_vis.R
 ## [ AUTH ] Benjamin Skinner; bskinner@neh.gov & Maya Dalton; mdalton@neh.gov
-## [ INIT ] 09 October 2024
+## [ INIT ] 18 October 2024
 ##
 ## -----------------------------------------------------------------------------
 
 ## libraries
+<<<<<<< HEAD
 libs <- c("tidyverse", "readr", "sf", "usmap", "maps", 
-          "formattable", "crosswalkr", "plyr", "plotly", "ggplot2")
+          "formattable", "crosswalkr", "plyr", "plotly", "ggplot2",
+          "readxl")
 
+=======
+libs <- c("tidyverse", "sf", "plotly")
+>>>>>>> 0d31f8e05d7a77c0a55c2aa162d8ec061ee5c2ee
 sapply(libs, require, character.only = TRUE)
 
 ## paths (./scripts as working directory)
@@ -36,8 +41,7 @@ app_st <- c("AL", "GA", "KY", "MD", "MS", "NY", "NC", "OH", "PA", "SC", "TN",
 ## Analysis data frame
 ## -----------------------------------------------------------------------------
 
-df <- read_csv(file.path(dat_dir, "analysis.csv")) |>
-  distinct()
+df <- read_csv(file.path(dat_dir, "analysis.csv"))
 
 df_arc <- read_excel(list.files(file.path(dat_dir, "arc"), full.names = TRUE),
                      skip = 4) |>
@@ -59,33 +63,53 @@ df_arc <- read_excel(list.files(file.path(dat_dir, "arc"), full.names = TRUE),
 ## Initial Trend Plots
 ## -----------------------------------------------------------------------------
 
-## Avg Poverty Rate
-png(file.path(fig_dir, "pov_rate.png"), res=100)
-df |> 
-  subset(appalachia == 1) |>
-  group_by(yearawarded) |>
-  mutate(avg_pov = mean(poverty_rate, na.rm=T)) |>
-  ggplot(aes(x=yearawarded, y=avg_pov)) + 
-    stat_smooth(color="black", linewidth=0.5, se=F, method = "loess") +
-    scale_y_continuous(labels = scales::comma) + 
-    labs(x="Year", y="Avg. Poverty Rate (%)", 
-         title="Figure 1a. Appalachian Poverty Rate Over Time") +
-    theme_minimal()
-dev.off()
+## -------------------------------------
+## average poverty rate
+## -------------------------------------
 
-## Avg Unemployment Rate
-png(file.path(fig_dir, "unemp_rate.png"), res=90)
-df |>
-  subset(appalachia == 1) |>
+g <- df |>
+  filter(appalachia == 1, yearawarded < 2023) |>
   group_by(yearawarded) |>
-  mutate(avg_unemp = mean(unemp_rate, na.rm=T)) |>
-  ggplot(aes(x=yearawarded, y=avg_unemp)) + 
-    stat_smooth(color="black", linewidth=0.5, se=F, method = "loess") +
-    scale_y_continuous(labels = scales::comma) + 
-    labs(x="Year", y="Avg. Unemployment Rate (%)", 
-         title="Figure 1b. Appalachian Unemployment Rate Over Time") +
-    theme_minimal()
-dev.off()
+  mutate(avg_pov = mean(poverty_rate)) |>
+  ggplot(aes(x = yearawarded, y = avg_pov)) +
+  stat_smooth(color = "black", linewidth = 0.5, se = FALSE, method = "loess") +
+  scale_y_continuous(labels = scales::label_percent(scale = 1)) +
+  labs(x = "Year",
+       y = "Avg. Poverty Rate (%)",
+       title = "Appalachian Poverty Rate Over Time") +
+  theme_minimal() +
+  theme(panel.grid.minor.x = element_blank())
+
+ggsave(filename = file.path(fig_dir, "pov_rate.pdf"),
+       g,
+       units = "in",
+       height = 4,
+       width = 6,
+       dpi = "retina")
+
+## -------------------------------------
+## average unemployment rate
+## -------------------------------------
+
+g <- df |>
+  filter(appalachia == 1) |>
+  group_by(yearawarded) |>
+  mutate(avg_unemp = mean(unemp_rate)) |>
+  ggplot(aes(x = yearawarded, y = avg_unemp)) +
+  stat_smooth(color = "black", linewidth = 0.5, se = FALSE, method = "loess") +
+  scale_y_continuous(labels = scales::label_percent(scale = 1)) +
+  labs( = "Year",
+       y = "Avg. Unemployment Rate (%)",
+       title = "Appalachian Unemployment Rate Over Time") +
+  theme_minimal() +
+  theme(panel.grid.minor.x = element_blank())
+
+ggsave(filename = file.path(fig_dir, "unemp_rate.pdf"),
+       g,
+       units = "in",
+       height = 4,
+       width = 6,
+       dpi = "retina")
 
 ## Total NEH Awarded 
 png(file.path(fig_dir, "neh_awards.png"), res=90)
@@ -105,60 +129,107 @@ dev.off()
 png(file.path(fig_dir, "poverty_awards.png"), res=90)
 df |>
   subset(appalachia == 1) |>
-  ggplot(aes(x=poverty_rate, y=ao)) + 
-    geom_bar(fill="slateblue", stat="identity", width=0.6, alpha=0.4) +
-    scale_y_continuous(labels = scales::comma) + 
-    labs(y="NEH Funding", x="Poverty Rate (%)", 
-         title="Figure 3a. NEH Funding and Poverty Rates\nin Appalachia") +
-    theme_minimal()
+  ggplot(aes(x=poverty_rate, y=ao)) +
+  geom_bar(fill="slateblue", stat="identity", width=0.6, alpha=0.4) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(y="NEH Funding", x="Poverty Rate (%)",
+       title="Figure 3a. NEH Funding and Poverty Rates\nin Appalachia") +
+  theme_minimal()
 dev.off()
 
 ## Unemployment Rate & NEH Funding
 png(file.path(fig_dir, "unemp_awards.png"), res=90)
 df |>
   subset(appalachia == 1) |>
-  ggplot(aes(x=unemp_rate, y=ao)) + 
-    geom_bar(fill="slateblue", stat="identity", width=0.4, alpha=0.4) +
-    scale_y_continuous(labels = scales::comma) + 
-    labs(y="NEH Funding", x="Unemployment Rate (%)", 
-         title="Figure 3b. NEH Funding and Unemployment Rates\nin Appalachia") +
-    theme_minimal()
+  ggplot(aes(x=unemp_rate, y=ao)) +
+  geom_bar(fill="slateblue", stat="identity", width=0.4, alpha=0.4) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(y="NEH Funding", x="Unemployment Rate (%)",
+       title="Figure 3b. NEH Funding and Unemployment Rates\nin Appalachia") +
+  theme_minimal()
 dev.off()
 
 ## -----------------------------------------------------------------------------
 ## Regional Maps
 ## -----------------------------------------------------------------------------
 
-## NEH Funding in Appalachia (2018-2023) - APPENDIX
-
 # Subset main df to only Appalachia
 df_app <- df |>
-  subset(appalachia == 1)
+  subset(appalachia == 1) |>
+  group_by(county, stname) |>
+  mutate(region = tolower(stname), # Lowercase states for merge
+         subregion = tolower(county), # Lowercase counties for merge
+         total_award = sum(ao, na.rm=T), # Total funding per county
+         avg_pov = mean(poverty_rate, na.rm=T), # Avg poverty rate per county
+         avg_unemp = mean(unemp_rate, na.rm=T)) # Avg unemp rate per county
 
 # Get the state & counties boundaries data from the maps package
 st_app <- map_data("state", region = tolower(df_app$stname)) # State boundaries separate
 st_ct_map <- map_data("county", region=tolower(df_app$stname)) # State & county boundaries
-ct_app <- st_ct_map |> # subset for all appalachian counties
+
+ct_app <- st_ct_map |> # subset for all appalachian counties in ARC
   group_by(region, subregion) |>
   subset(region %in% unique(tolower(df_arc$state)) & 
            paste(region, subregion) %in% 
            paste(tolower(df_arc$state), tolower(df_arc$county)))
 
-# Plot 
+# Merge counties data w/ NEH data for fill
+df_app_ct <- left_join(ct_app, df_app, by=c("region", "subregion")) %>%
+  drop_na(ao) 
+
+## NEH Funding in Appalachia (2018-2023) - APPENDIX
+png(file.path(fig_dir, "neh_map.png"), width = 5.5, height = 5, units = "in", res=1200)
 ggplot() +
   geom_polygon(data = st_ct_map, aes(x = long, y = lat, group = group),  # Add county boundaries
                fill = "white", color = "black", size = 0.2) +
   geom_polygon(data = ct_app, aes(x = long, y = lat, group = group),  # Add counties in region
-               fill = "lightblue", color = "black", size = 0.2) +
+               fill = "grey", color = "black", size = 0.2) +
   geom_polygon(data = st_app, aes(x = long, y = lat, group = group),  # Add state boundaries
                fill = NA, color = "black", size = 0.5) +
-  theme_void()
+  geom_polygon(data = df_app_ct, aes(x = long, y = lat.x, group=group, # Add NEH funding fill
+                                     fill=as.numeric(total_award)), 
+               color="black", size = 0.2, alpha=0.8) +
+  scale_fill_distiller(type = "seq", palette = "Reds", labels=scales::label_comma()) + 
+  labs(title="Figure 4. Appalachian Counties with NEH Funding", fill="Award Amount")+
+  ggthemes::theme_map()+
+  theme(legend.position = "right")
+dev.off()
 
 ## Appalachia Average Poverty Rate (2018-2022) - APPENDIX
-
+png(file.path(fig_dir, "poverty_map.png"), width = 5.5, height = 5, units = "in", res=1200)
+ggplot() +
+  geom_polygon(data = st_ct_map, aes(x = long, y = lat, group = group),  # Add county boundaries
+               fill = "white", color = "black", size = 0.2) +
+  geom_polygon(data = ct_app, aes(x = long, y = lat, group = group),  # Add counties in region
+               fill = "grey", color = "black", size = 0.2) +
+  geom_polygon(data = st_app, aes(x = long, y = lat, group = group),  # Add state boundaries
+               fill = NA, color = "black", size = 0.5) +
+  geom_polygon(data = df_app_ct, aes(x = long, y = lat.x, group=group, # Add NEH funding fill
+                                     fill=as.numeric(avg_pov)), 
+               color="black", size = 0.2, alpha=0.8) +
+  scale_fill_distiller(type = "seq", palette = "Reds") + 
+  labs(title="Figure 5. Appalachian Poverty Rates", fill="Poverty Rate")+
+  ggthemes::theme_map()+
+  theme(legend.position = "right")
+dev.off()
 
 ## Appalachia Average Unemployment Rate (2018-2023) - APPENDIX
-
+png(file.path(fig_dir, "unemp_map.png"), width = 5.5, height = 5, units = "in", res=1200)
+ggplot() +
+  geom_polygon(data = st_ct_map, aes(x = long, y = lat, group = group),  # Add county boundaries
+               fill = "white", color = "black", size = 0.2) +
+  geom_polygon(data = ct_app, aes(x = long, y = lat, group = group),  # Add counties in region
+               fill = "grey", color = "black", size = 0.2) +
+  geom_polygon(data = st_app, aes(x = long, y = lat, group = group),  # Add state boundaries
+               fill = NA, color = "black", size = 0.5) +
+  geom_polygon(data = df_app_ct, aes(x = long, y = lat.x, group=group, # Add NEH funding fill
+                                     fill=as.numeric(avg_unemp)), 
+               color="black", size = 0.2, alpha=0.8) +
+  scale_fill_distiller(type = "seq", palette = "Reds") + 
+  labs(title="Figure 6. Appalachian Unemployment Rates", fill="Unemployment Rate")+
+  ggthemes::theme_map()+
+  theme(legend.position = "right")
+dev.off()
 
 ## -----------------------------------------------------------------------------
 ## Summary Tables

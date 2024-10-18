@@ -7,20 +7,6 @@
 ##
 ## -----------------------------------------------------------------------------
 
-## TODO
-## 1. Pull out distinct institutions from grants data and save to csv
-##    - institution name, city, state, zip
-
-## 2. Look for HEIs and likely HEIs (e.g., Georgia Research Foundation) and
-##    associate UNITIDs from IPEDS with them (add as column)
-## 3. Save crosswalk with institution name (as in grants data) and UNITID
-##    - alternatively, leave all columns, but we'll just read in the two
-## 4. Add code in this script to
-##    - read in crosswalk
-##    - left_join() to grants data on name
-##    - left_join() to IPEDS data on UNITID
-## 5. Remove analysis_ipeds.csv save (no longer necessary)
-
 ## libraries
 libs <- c("tidyverse", "readxl", "sf", "crosswalkr")
 sapply(libs, require, character.only = TRUE)
@@ -241,7 +227,7 @@ df_arc <- read_excel(list.files(file.path(dat_dir, "arc"), full.names = TRUE),
                      skip = 4) |>
   rename_all(tolower) |>
   mutate(appalachia = 1) |>
-  select(fips, appalachia)
+  select(fips, appalachia) 
 
 ## -----------------------------------------------------------------------------
 ## IPEDS data
@@ -311,7 +297,6 @@ df_eco <- df_bls |>
   select(year, fips, county = name, appalachia, unemp_rate, poverty_rate) |>
   mutate(county = str_remove_all(county, " County"))
 
-
 ## -----------------------------------------------------------------------------
 ## place applications in counties
 ## -----------------------------------------------------------------------------
@@ -345,26 +330,29 @@ df_grant <- df_grant |>
 ## -----------------------------------------------------------------------------
 
 ## make a UNITID crosswalk for use & save csv
-cw_unitid <- df_ipeds %>% select(heiname, unitid) |> distinct()
-write_csv(cw_unitid, file.path(dat_dir, "ipeds/cw_unitid.csv"))
+cw_unitid <- df_ipeds |> select(heiname, unitid) |> distinct()
+write_csv(cw_unitid, file.path(dat_dir, "cw_unitid.csv"))
 
 ## Pull out distinct institutions from grant data & save csv
 df_grant_hei <- df_grant |>
   select(institution, instcity, inststate, zip) |>
   distinct()
-write_csv(df_grant_hei, file.path(dat_dir, "neh/df_grant_hei.csv"))
+write_csv(df_grant_hei, file.path(dat_dir, "df_grant_hei.csv"))
 
 ## read in NEH/UNITID data - manually added UNITID to NEH data
-df_neh_unitid <- read_csv(file.path(dat_dir, "neh/clean_neh_unitid.csv")) |>
-  select(institution, unitid) |>
-  drop_na()
+df_neh_unitid <- read_csv(file.path(dat_dir, "clean_neh_unitid.csv"),
+                          show_col_types = FALSE,
+                          col_select = c(institution, unitid, instcity)) |>
+  drop_na() |>
+  distinct(institution, instcity, unitid)
 
 ## Join UNITID into NEH grant data
-df_grant_unitid <- left_join(df_grant, df_neh_unitid, by="institution")
+df_grant_unitid <- df_grant |>
+  left_join(df_neh_unitid, by = c("institution", "instcity"))
 
 ## Join NEH data and ipeds
-df_grant_ipeds <- left_join(df_grant_unitid, df_ipeds, by="unitid") |>
-  distinct()
+df_grant_ipeds <- df_grant_unitid |>
+  left_join(df_ipeds, by = c("unitid", "fips", "yearawarded" = "year"))
 
 ## -----------------------------------------------------------------------------
 ## join final data set and save
@@ -372,10 +360,10 @@ df_grant_ipeds <- left_join(df_grant_unitid, df_ipeds, by="unitid") |>
 
 ## join
 df <- df_grant_ipeds |>
-  left_join(df_eco, by = c("fips.x" = "fips", "yearawarded" = "year")) |>
+  left_join(df_eco, by = c("fips", "yearawarded" = "year")) |>
   left_join(cw_st_app |> select(stabbr, stname), by = c("inststate" = "stabbr")) |>
   select(appnumber, unitid, institution, orgtype = organizationtype, ccb, hbcu,
-         instcity, inststate, stname, county, appalachia, fips = fips.x, zip,
+         instcity, inststate, stname, county, appalachia, fips, zip,
          lon, lat, yearawarded, title = projecttitle, program, division,
          ao = awardoutright, newdiscipline, primarydiscipline,
          disciplines, unemp_rate, poverty_rate)
