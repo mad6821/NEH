@@ -9,10 +9,14 @@
 
 ## libraries
 <<<<<<< HEAD
+<<<<<<< HEAD
 libs <- c("tidyverse", "readr", "sf", "usmap", "maps", 
           "formattable", "crosswalkr", "plyr", "plotly", "ggplot2",
           "readxl")
 
+=======
+libs <- c("tidyverse", "sf", "plotly")
+>>>>>>> 0d31f8e05d7a77c0a55c2aa162d8ec061ee5c2ee
 =======
 libs <- c("tidyverse", "sf", "plotly")
 >>>>>>> 0d31f8e05d7a77c0a55c2aa162d8ec061ee5c2ee
