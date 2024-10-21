@@ -1,137 +1,163 @@
-###############################################
-# Shiny App for Intern Project
-# Maya A. Dalton
-# August 2024
-###############################################
-rm(list=ls())
+## -----------------------------------------------------------------------------
+##
+## [ PROJ ] Appalachian funding
+## [ FILE ] shiny_app.R
+## [ AUTH ] Maya Dalton (mdalton@neh.gov) Benjamin Skinner (bskinner@neh.gov)
+## [ INIT ] August 2024
+##
+## -----------------------------------------------------------------------------
+
+## libraries
+libs <- c("tidyverse", "readxl", "sf", "maps", "leaflet", "shiny", "crosswalkr")
+sapply(libs, require, character.only = TRUE)
+
+## paths (./scripts as working directory)
+args <- commandArgs(trailingOnly = TRUE)
+root <- ifelse(length(args) == 0, file.path(".."), args)
+dat_dir <- file.path(root, "data")
+fig_dir <- file.path(root, "figures")
+scr_dir <- file.path(root, "scripts")
+tab_dir <- file.path(root, "tables")
 
 # Load libraries
-library(shiny)
-library(ggplot2)
-library(sf)
-library(dplyr)
-library(leaflet)
-library(readr)
-library(readxl)
-library(tidyverse)
-library(plotly)
-library(maps)
-library(formattable)
-library(vtable)
-library(scales)
-library(htmltools)
+## library(plotly)
+## library(formattable)
+## library(vtable)
+## library(scales)
+## library(htmltools)
 
-# Set working directory (may have to set own path file on personal device)
-## setwd("~/Desktop/NEH/Project/MD_InternProject")
+## -------------------------------------
+## macros
+## -------------------------------------
 
-# Load datasets
-app_econ_df <- read_csv("EconData/appalachian_econ_df.csv") # Census economic data for merging
-arc_clean <- read_csv("arc_clean.csv") # ARC Data for designated counties in Appalachia
-df_clean <- read_csv("df_clean.csv") # NEH merge with Econ Stats
-df_clean <- df_clean %>%
-  mutate_if(is.character, str_trim) # Trim white space off names
+## award period
+award_period <- 2018:2023
 
-###############################################
-# Counties data from SF
-###############################################
-usa <- st_as_sf(maps::map("state", fill=TRUE, plot =FALSE)) # STATE DATA
-app_states <- unique(tolower(df_clean$State)) # List of lower case Appalachian states for merge
-app_counties <- unique(df_clean$County) # List of Appalachian counties for plots 
-appalachia <- usa %>%
-  subset(ID %in% app_states) # Subset sf data to Appalachian region STATES ONLY
+## appalachian state abbreviations
+app_st <- c("AL", "GA", "KY", "MD", "MS", "NY", "NC", "OH", "PA", "SC", "TN",
+            "VA", "WV")
 
-counties <- st_as_sf(maps::map("county", plot = FALSE, fill = TRUE)) # COUNTIES DATA
-counties <- separate(counties, ID, c("state", "county"), ",") # Separate into two columns
-counties <- subset(counties, state %in% tolower(app_states)) # Subset sf to ALL COUNTIES & STATES in region
+## counties in Appalachian region
+df_arc <- read_excel(list.files(file.path(dat_dir, "arc"), full.names = TRUE),
+                     skip = 4) |>
+  rename_all(tolower) |>
+  left_join(county.fips |>
+              mutate(fips = sprintf("%05d", fips)),
+            by = "fips") |>
+  rename(county_name = polyname)
 
-counties <- counties %>% # Fix county anomalies
-  mutate(county = case_when( 
-    county == "de kalb" ~ "dekalb",
-    county == "st clair" ~ "st. clair",
-    .default = as.character(county)
-  ),
-  state = str_to_title(state)) # Capitalize states for cleaning
+## -----------------------------------------------------------------------------
+## read in data
+## -----------------------------------------------------------------------------
+
+df <- read_csv(file.path(dat_dir, "analysis.csv"),
+               show_col_types = FALSE)
+
+## -----------------------------------------------------------------------------
+## map data
+## -----------------------------------------------------------------------------
+
+## states
+map_app_st <- st_as_sf(maps::map("state", fill = TRUE, plot = FALSE)) |>
+  rename_all(tolower) |>
+  filter(id %in% pull(distinct(df_arc, state = tolower(state), state)))
+
+## counties
+map_app_ct <- st_as_sf(maps::map("county", plot = FALSE, fill = TRUE)) |>
+  rename_all(tolower) |>
+  filter(id %in% pull(distinct(df_arc, county_name = tolower(county_name),
+                               county_name))) |>
+  separate(id, c("state", "county"), sep = ",") |>
+  mutate(state = str_to_title(state))
+
+## counties <- counties %>% # Fix county anomalies
+##   mutate(county = case_when(
+##     county == "de kalb" ~ "dekalb",
+##     county == "st clair" ~ "st. clair",
+##     .default = as.character(county)
+##   ),
+##   state = str_to_title(state)) # Capitalize states for cleaning
 
 ###############################################
 # Cleaning counties to Appalachia
 ###############################################
 
-# Subsetting econ data by state, then re-binding together to avoid counties with the same
-# name in different states overlapping one another (i.e., Jefferson Co. in AL, OH, and WV)
+## # Subsetting econ data by state, then re-binding together to avoid counties with the same
+## # name in different states overlapping one another (i.e., Jefferson Co. in AL, OH, and WV)
 
-appstates <- c("Alabama", "Georgia")
+## appstates <- c("Alabama", "Georgia")
 
-out_list <- purrr::map(appstates,
-                       ~ subset(app_econ_df, State == .x) |>
-                         subset(counties, county %in% tolower(.data$County) & state == .x))
+## out_list <- purrr::map(appstates,
+##                        ~ subset(app_econ_df, State == .x) |>
+##                          subset(counties, county %in% tolower(.data$County) & state == .x))
 
-econ_list <- vector("list", length(appstates))
-counties_list <- vector("list", length(appstates))
-for(i in appstates) {
-  tmp_st <- subset(app_econ_df, State == i)
-  counties_list[[i]] <- subset(counties, county %in% tolower(tmp_state[[i]]$County) & state == i)
-  econ_list[[i]] <- tmp_state
-}
+## econ_list <- vector("list", length(appstates))
+## counties_list <- vector("list", length(appstates))
+## for(i in appstates) {
+##   tmp_st <- subset(app_econ_df, State == i)
+##   counties_list[[i]] <- subset(counties, county %in% tolower(tmp_state[[i]]$County) & state == i)
+##   econ_list[[i]] <- tmp_state
+## }
 
-# Alabama
-econ_al <- subset(app_econ_df, State == "Alabama")
-counties_al <- subset(counties, county %in% tolower(econ_al$County) & state == "Alabama")
+## # Alabama
+## econ_al <- subset(app_econ_df, State == "Alabama")
+## counties_al <- subset(counties, county %in% tolower(econ_al$County) & state == "Alabama")
 
-# Georgia
-econ_ga <- subset(app_econ_df, State == "Georgia")
-counties_ga <- subset(counties, county %in% tolower(econ_ga$County) & state == "Georgia")
+## # Georgia
+## econ_ga <- subset(app_econ_df, State == "Georgia")
+## counties_ga <- subset(counties, county %in% tolower(econ_ga$County) & state == "Georgia")
 
-# Kentucky
-econ_ky <- subset(app_econ_df, State == "Kentucky")
-counties_ky <- subset(counties, county %in% tolower(econ_ky$County) & state == "Kentucky")
+## # Kentucky
+## econ_ky <- subset(app_econ_df, State == "Kentucky")
+## counties_ky <- subset(counties, county %in% tolower(econ_ky$County) & state == "Kentucky")
 
-# Maryland
-econ_md <- subset(app_econ_df, State == "Maryland")
-counties_md <- subset(counties, county %in% tolower(econ_md$County) & state == "Maryland")
+## # Maryland
+## econ_md <- subset(app_econ_df, State == "Maryland")
+## counties_md <- subset(counties, county %in% tolower(econ_md$County) & state == "Maryland")
 
-# Mississippi
-econ_ms <- subset(app_econ_df, State == "Mississippi")
-counties_ms <- subset(counties, county %in% tolower(econ_ms$County) & state == "Mississippi")
+## # Mississippi
+## econ_ms <- subset(app_econ_df, State == "Mississippi")
+## counties_ms <- subset(counties, county %in% tolower(econ_ms$County) & state == "Mississippi")
 
-# New York
-econ_ny <- subset(app_econ_df, State == "New York")
-counties_ny <- subset(counties, county %in% tolower(econ_ny$County) & state == "New York")
+## # New York
+## econ_ny <- subset(app_econ_df, State == "New York")
+## counties_ny <- subset(counties, county %in% tolower(econ_ny$County) & state == "New York")
 
-# North Carolina
-econ_nc <- subset(app_econ_df, State == "North Carolina")
-counties_nc <- subset(counties, county %in% tolower(econ_nc$County) & state == "North Carolina")
+## # North Carolina
+## econ_nc <- subset(app_econ_df, State == "North Carolina")
+## counties_nc <- subset(counties, county %in% tolower(econ_nc$County) & state == "North Carolina")
 
-# Ohio
-econ_oh <- subset(app_econ_df, State == "Ohio")
-counties_oh <- subset(counties, county %in% tolower(econ_oh$County) & state == "Ohio")
+## # Ohio
+## econ_oh <- subset(app_econ_df, State == "Ohio")
+## counties_oh <- subset(counties, county %in% tolower(econ_oh$County) & state == "Ohio")
 
-# Pennsylvania
-econ_pa <- subset(app_econ_df, State == "Pennsylvania")
-counties_pa <- subset(counties, county %in% tolower(econ_pa$County) & state == "Pennsylvania")
+## # Pennsylvania
+## econ_pa <- subset(app_econ_df, State == "Pennsylvania")
+## counties_pa <- subset(counties, county %in% tolower(econ_pa$County) & state == "Pennsylvania")
 
-# South Carolina
-econ_sc <- subset(app_econ_df, State == "South Carolina")
-counties_sc <- subset(counties, county %in% tolower(econ_sc$County) & state == "South Carolina")
+## # South Carolina
+## econ_sc <- subset(app_econ_df, State == "South Carolina")
+## counties_sc <- subset(counties, county %in% tolower(econ_sc$County) & state == "South Carolina")
 
-# Tennessee
-econ_tn <- subset(app_econ_df, State == "Tennessee")
-counties_tn <- subset(counties, county %in% tolower(econ_tn$County) & state == "Tennessee")
+## # Tennessee
+## econ_tn <- subset(app_econ_df, State == "Tennessee")
+## counties_tn <- subset(counties, county %in% tolower(econ_tn$County) & state == "Tennessee")
 
-# Virginia
-econ_va <- subset(app_econ_df, State == "Virginia")
-counties_va <- subset(counties, county %in% tolower(econ_va$County) & state == "Virginia")
+## # Virginia
+## econ_va <- subset(app_econ_df, State == "Virginia")
+## counties_va <- subset(counties, county %in% tolower(econ_va$County) & state == "Virginia")
 
-# West Virginia
-econ_wv <- subset(app_econ_df, State == "West Virginia")
-counties_wv <- subset(counties, county %in% tolower(econ_wv$County) & state == "West Virginia")
+## # West Virginia
+## econ_wv <- subset(app_econ_df, State == "West Virginia")
+## counties_wv <- subset(counties, county %in% tolower(econ_wv$County) & state == "West Virginia")
 
-counties_app <- rbind(counties_al, counties_ga, counties_ky, counties_md, counties_ms, counties_nc,
-                      counties_ny, counties_oh, counties_pa, counties_sc, counties_tn, counties_va, counties_wv)
+## counties_app <- rbind(counties_al, counties_ga, counties_ky, counties_md, counties_ms, counties_nc,
+##                       counties_ny, counties_oh, counties_pa, counties_sc, counties_tn, counties_va, counties_wv)
 
-df_clean$county <- tolower(df_clean$County) # Lowercase county in NEH/Econ merge
-df_clean$state <- df_clean$State # Lowercase state in NEH/Econ merge
+## df_clean$county <- tolower(df_clean$County) # Lowercase county in NEH/Econ merge
+## df_clean$state <- df_clean$State # Lowercase state in NEH/Econ merge
 
-app_merge <- left_join(counties_app, df_clean, by = c("state"="State", "county"))
+## app_merge <- left_join(counties_app, df_clean, by = c("state"="State", "county"))
 
 ###############################################
 # Additional cleaning and merging
@@ -182,42 +208,42 @@ ui <- fluidPage(
                    column(width = 12,
                           h4("Award Overview"), 
                           tableOutput("summaryTable1")
-                   )
+                          )
                  )
-        ),
+                 ),
         tabPanel("Award Summary Statistics",
                  fluidRow(    # COUNTIES MAP
                    column(width = 8,
                           h4("Appalachian Regional Map"), 
                           leafletOutput("countyMap2")
-                   )
+                          )
                  ),
                  fluidRow(   # DISCIPLINES TABLE
                    column(width = 12,
                           h4("Disciplines Funded"), 
                           tableOutput("summaryTable2")
-                   )
+                          )
                  ),
                  fluidRow(   # DIVISIONS TABLE
                    column(width = 12,
                           h4("Divisions Funded"), 
                           tableOutput("summaryTable3")
-                   )
+                          )
                  ),
                  fluidRow(   # ORGANIZATION TYPE TABLE
                    column(width = 12,
                           h4("Organizations Funded"), 
                           DT::DTOutput("summaryTable4")
-                   )
+                          )
                  ),
                  fluidRow(   # AWARDEE INFORMATION
                    column(width = 12,
                           h4("Individual Awardee Information"), 
                           DT::DTOutput("summaryTable5")
-                   )
+                          )
                  ),
                  
-        )
+                 )
       )
     )
   )
