@@ -176,8 +176,14 @@ df_grant <- df_grant |>
 df_grant <- df_grant |>
   filter(!grepl("Humanities Council", organizationtype))
 
-## TODO: some of the challenge programs receive $0 in award outright,
-## so need to either pull matching or original amount. 
+## some programs receive $0 in award outright, so need to check awardmatch
+## first, then if that 0, approved outright
+df_grant <- df_grant |>
+  mutate(totaward = case_when(
+    awardoutright == 0 & awardmatching == 0 ~ approvedoutright,
+    awardoutright == 0 & awardmatching > 0 ~ awardmatching,
+    awardoutright > 0 ~ awardoutright)
+    )
 
 ## -----------------------------------------------------------------------------
 ## Cleaning, subsetting BLS economic data for Appalachian States and merging
@@ -368,7 +374,7 @@ df <- df_grant_ipeds |>
   select(appnumber, unitid, institution, orgtype = organizationtype, ccb, hbcu,
          instcity, inststate, stname, county, appalachia, fips, zip,
          lon, lat, yearawarded, title = projecttitle, program, division,
-         ao = awardoutright, newdiscipline, primarydiscipline,
+         totaward, newdiscipline, primarydiscipline,
          disciplines, unemp_rate, poverty_rate)
 
 ## save
