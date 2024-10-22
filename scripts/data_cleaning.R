@@ -364,10 +364,12 @@ df_grant_ipeds <- df_grant_unitid |>
   left_join(df_ipeds, by = c("unitid", "fips", "yearawarded" = "year"))
 
 ## -----------------------------------------------------------------------------
-## join final data set and save
+## join, aggregate stats, final, save
 ## -----------------------------------------------------------------------------
 
+## ----------------------
 ## join
+## ----------------------
 df <- df_grant_ipeds |>
   left_join(df_eco, by = c("fips", "yearawarded" = "year")) |>
   left_join(cw_st_app |> select(stabbr, stname), by = c("inststate" = "stabbr")) |>
@@ -377,7 +379,28 @@ df <- df_grant_ipeds |>
          totaward, newdiscipline, primarydiscipline,
          disciplines, unemp_rate, poverty_rate)
 
+## ----------------------
+## get aggregate
+## ----------------------
+df_county <- df |>
+  group_by(fips) |>
+  summarise(fips_all_totaward = sum(totaward))
+
+df_county_year <- df |>
+  group_by(fips, yearawarded) |>
+  summarise(fips_yr_totaward = sum(totaward),
+            .groups = "drop")
+
+## ----------------------
+## rejoin
+## ----------------------
+df <- df |>
+  left_join(df_county, by = "fips") |>
+  left_join(df_county_year, by = c("fips", "yearawarded"))
+
+## ----------------------
 ## save
+## ----------------------
 write_csv(df, file.path(dat_dir, "analysis.csv"))
 
 ## -----------------------------------------------------------------------------
