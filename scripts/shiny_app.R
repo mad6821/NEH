@@ -70,6 +70,7 @@ df_agg_ct <- df |>
   summarise(totaward = first(fips_all_totaward),
             unemp_rate = mean(unemp_rate),
             poverty_rate = mean(poverty_rate, na.rm = TRUE),
+            yearawarded = 0,
             .groups = "drop") |>
   rename(state = stname)
 
@@ -79,6 +80,8 @@ df_agg_ct_yr <- df |>
   distinct(fips_yr_totaward, .keep_all = TRUE) |>
   rename(totaward = fips_yr_totaward,
          state = stname)
+
+df_agg <- bind_rows(df_agg_ct, df_agg_ct_yr)
 
 ## -----------------------------------------------------------------------------
 ## map data
@@ -139,7 +142,7 @@ ui <- fluidPage(
       ),
       ## tabbed panels that with different output per tab
       tabsetPanel(
-        tabPanel("Overview of Awards Granted"
+        tabPanel("Overview of Awards Granted",
                  fluidRow(   # AWARDS STATS
                    column(width = 12,
                           h4("Award Overview"),
@@ -205,14 +208,14 @@ server <- function(input, output, session) {
     ## filter on state (or all)
     ## -------------------------------------
     if (input$state == "All") {
-      select_df_agg <- df_agg_ct
+      select_df_agg <- df_agg
       select_map_ct <- map_ct
       select_map_st <- map_st
       map_title <- tags$div(
         tag.map.title, HTML("Appalachian Region")
       )
     } else {
-      select_df_agg <- df_agg_ct_yr |> filter(state == input$state)
+      select_df_agg <- df_agg |> filter(state == input$state)
       select_map_ct <- map_ct |> filter(state == input$state)
       select_map_st <- map_st |> filter(state == input$state)
       map_title <- tags$div(
@@ -224,10 +227,9 @@ server <- function(input, output, session) {
     ## filter on year (or all)
     ## -------------------------------------
     if (input$year == "All") {
-      select_df_agg <- select_df_agg
+      select_df_agg <- select_df_agg |> filter(yearawarded == 0)
     } else {
-      select_df_agg <- select_df_agg |>
-        filter(yearawarded == as.numeric(input$year))
+      select_df_agg <- select_df_agg |> filter(yearawarded == input$year)
       ## ----------------------
       ## message: no data
       ## ----------------------
@@ -327,7 +329,6 @@ server <- function(input, output, session) {
                  position = "topleft",
                  className = "map-title")
   })
-
 
   ####################################################
   ########### Award & Econ Stats Table ###############
