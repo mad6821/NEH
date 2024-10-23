@@ -342,6 +342,7 @@ server <- function(input, output, session) {
 
     # Create summary table
     summary_table <- neh_data |>
+      subset(appalachia == 1) |>
       summarise(total_grants = n(),
                 total_award = sum(totaward, na.rm = TRUE),
                 average_award = mean(totaward, na.rm = TRUE),
@@ -376,6 +377,7 @@ server <- function(input, output, session) {
 
     # Create discipline summary stats
     disc_table <- neh_data |>
+      subset(appalachia == 1) |>
       group_by(parent_discipline) |>
       summarise(count = n(),
                 awarded = sum(totaward, na.rm = TRUE)) |>
@@ -403,8 +405,9 @@ server <- function(input, output, session) {
       }
     }
 
-    # Create discipline summary stats
+    # Create division summary stats
     div_table <- neh_data |>
+      subset(appalachia == 1) |>
       group_by(division) |>
       summarise(count = n(),
                 awarded = sum(totaward, na.rm = TRUE)) |>
@@ -435,6 +438,7 @@ server <- function(input, output, session) {
 
     # Create organization type summary stats
     org_table <- neh_data |>
+      subset(appalachia == 1) |>
       group_by(org_type) |>
       summarise(count = n(),
                 awarded = sum(totaward, na.rm = TRUE)) |>
@@ -465,6 +469,7 @@ server <- function(input, output, session) {
 
     # Create summary table
     award_table <- neh_data |>
+      subset(appalachia == 1) |>
       mutate(awarded = scales::dollar(totaward)) |>
       select(institution, yearawarded, title, awarded, instcity, stname, county)
 
