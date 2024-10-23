@@ -8,7 +8,8 @@
 ## -----------------------------------------------------------------------------
 
 ## libraries
-libs <- c("tidyverse", "readxl", "sf", "leaflet", "shiny", "crosswalkr")
+libs <- c("tidyverse", "readxl", "sf", "leaflet", 
+          "shiny", "crosswalkr", "RColorBrewer")
 sapply(libs, require, character.only = TRUE)
 
 ## paths (./scripts as working directory)
@@ -109,6 +110,7 @@ map_st <- st_as_sf(maps::map("state", fill = TRUE, plot = FALSE)) |>
 ## -----------------------------------------------------------------------------
 ## UI
 ## -----------------------------------------------------------------------------
+
 # Define UI
 ui <- fluidPage(
   ## -------------------------------------
@@ -362,8 +364,8 @@ server <- function(input, output, session) {
     ## -------------------------------------
     ## set up color palatte
     ## -------------------------------------
-    pal <- colorNumeric(palette = "Spectral",
-                        na.color = "#808080",
+    pal <- colorNumeric(palette = brewer.pal(n = 9, name = "Reds"), 
+                        na.color = "#808080", 
                         domain = select_df_agg$totaward)
 
     ## -------------------------------------
@@ -399,6 +401,7 @@ server <- function(input, output, session) {
                   color = "black",
                   weight = 1,
                   label = neh_labels,
+                  fillOpacity = 0.8,
                   labelOptions = labelOptions(
                     style = list("color" = "black",
                                  "font-size" = "12px",
