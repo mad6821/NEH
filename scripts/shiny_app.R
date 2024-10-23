@@ -150,31 +150,32 @@ ui <- fluidPage(
                           )
                  )
                  ),
-        tabPanel("Award Summary Statistics")##,
-        ##          fluidRow(   # DISCIPLINES TABLE
-        ##            column(width = 12,
-        ##                   h4("Disciplines Funded"),
-        ##                   tableOutput("summaryTable2")
-        ##                   )
-        ##          ),
-        ##          fluidRow(   # DIVISIONS TABLE
-        ##            column(width = 12,
-        ##                   h4("Divisions Funded"),
-        ##                   tableOutput("summaryTable3")
-        ##                   )
-        ##          ),
-        ##          fluidRow(   # ORGANIZATION TYPE TABLE
-        ##            column(width = 12,
-        ##                   h4("Organizations Funded"),
-        ##                   DT::DTOutput("summaryTable4")
-        ##                   )
-        ##          ),
-        ##          fluidRow(   # AWARDEE INFORMATION
-        ##            column(width = 12,
-        ##                   h4("Individual Awardee Information"),
-        ##                   DT::DTOutput("summaryTable5")
-        ##                   )
-        ##          ),
+        tabPanel("Award Summary Statistics",
+                 fluidRow(   # DISCIPLINES TABLE
+                   column(width = 12,
+                          h4("Disciplines Funded"),
+                          tableOutput("summaryTable2")
+                          )
+                 ),
+                 fluidRow(   # DIVISIONS TABLE
+                   column(width = 12,
+                          h4("Divisions Funded"),
+                          tableOutput("summaryTable3")
+                          )
+                 ),
+                 fluidRow(   # ORGANIZATION TYPE TABLE
+                   column(width = 12,
+                          h4("Organizations Funded"),
+                          DT::DTOutput("summaryTable4")
+                          )
+                 ),
+                 fluidRow(   # AWARDEE INFORMATION
+                   column(width = 12,
+                          h4("Individual Awardee Information"),
+                          DT::DTOutput("summaryTable5")
+                          )
+                 )
+                 )
       )
     )
   )
@@ -335,7 +336,6 @@ server <- function(input, output, session) {
   #### Includes count of awards, max, and average ####
   ####################################################
   output$summaryTable1 <- renderTable({
-    # Filter data based on selected state and year
     neh_data <- df
     if (input$state != "All") {
       neh_data <- neh_data |> filter(stname == input$state)
@@ -361,129 +361,127 @@ server <- function(input, output, session) {
     print(summary_table)
   })
 
-  ## ####################################################################################################
-  ## ################################# SUMMARY STATISTICS TAB ###########################################
-  ## ####################################################################################################
+  ####################################################################################################
+  ################################# SUMMARY STATISTICS TAB ###########################################
+  ####################################################################################################
 
-  ## ####################################################
-  ## ########### Discipline Statistics Table ############
-  ## ########## Includes count & amount awarded #########
-  ## ####################################################
-  ##   output$summaryTable2 <- renderTable({
-  ##     # Filter data based on selected state and year
-  ##     state_data <- df_clean
-  ##     if (input$state != "All") {
-  ##       state_data <- state_data %>% filter(state == input$state)
-  ##     }
-  ##     if (input$year != "All") {
-  ##       state_data <- state_data %>% filter(YearAwarded == as.numeric(input$year))
-  ##       if (nrow(state_data) == 0) {
-  ##         return(data.frame("Message" = "No Data Available"))
-  ##       }
-  ##     }
+  ####################################################
+  ########### Discipline Statistics Table ############
+  ########## Includes count & amount awarded #########
+  ####################################################
+  output$summaryTable2 <- renderTable({
+    neh_data <- df
+    if (input$state != "All") {
+      neh_data <- neh_data |> filter(stname == input$state)
+    }
+    if (input$year != "All") {
+      neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
+      if (nrow(neh_data) == 0) {
+        return(data.frame("Message" = "No Data Available"))
+      }
+    }
 
-  ##     # Create discipline summary stats
-  ##     disc_table <- state_data %>%
-  ##       group_by(Discipline) %>%
-  ##       summarise(Count = n(), Awarded = sum(OriginalAmount, na.rm=T)) %>%
-  ##       arrange(desc(Awarded))
+    # Create discipline summary stats
+    disc_table <- neh_data |>
+      group_by(parent_discipline) |>
+      summarise(count = n(),
+                awarded = sum(totaward, na.rm = TRUE)) |>
+      arrange(desc(awarded)) |>
+      mutate(awarded = scales::dollar(awarded))
 
-  ##     # Format the table
-  ##     disc_table$Awarded <- paste('$',formatC(disc_table$Awarded, big.mark=',', format = 'f', digits=2))
-  ##     colnames(disc_table) <- c("Discipline", "Count", "Amount Awarded")
-  ##     print(disc_table)
-  ##     })
+    # Format the table
+    colnames(disc_table) <- c("Discipline", "Count", "Amount Awarded")
+    print(disc_table)
+  })
 
-  ##   ####################################################
-  ##   ############ Division Statistics Table #############
-  ##   ##### Includes count of disciplines & divisions ####
-  ##   ####################################################
-  ##   output$summaryTable3 <- renderTable({
-  ##     # Filter data based on selected state and year
-  ##     state_data <- df_clean
-  ##     if (input$state != "All") {
-  ##       state_data <- state_data %>% filter(state == input$state)
-  ##     }
-  ##     if (input$year != "All") {
-  ##       state_data <- state_data %>% filter(YearAwarded == as.numeric(input$year))
-  ##       if (nrow(state_data) == 0) {
-  ##         return(data.frame("Message" = "No Data Available"))
-  ##       }
-  ##     }
+  ####################################################
+  ############ Division Statistics Table #############
+  ##### Includes count of disciplines & divisions ####
+  ####################################################
+  output$summaryTable3 <- renderTable({
+    neh_data <- df
+    if (input$state != "All") {
+      neh_data <- neh_data |> filter(state == input$state)
+    }
+    if (input$year != "All") {
+      neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
+      if (nrow(neh_data) == 0) {
+        return(data.frame("Message" = "No Data Available"))
+      }
+    }
 
-  ##     # Create discipline summary stats
-  ##     div_table <- state_data %>%
-  ##       group_by(Division) %>%
-  ##       summarise(Count = n(), Awarded = sum(OriginalAmount, na.rm=T)) %>%
-  ##       arrange(desc(Awarded))
+    # Create discipline summary stats
+    div_table <- neh_data |>
+      group_by(division) |>
+      summarise(count = n(),
+                awarded = sum(totaward, na.rm = TRUE)) |>
+      arrange(desc(awarded)) |>
+      mutate(awarded = scales::dollar(awarded))
 
-  ##     # Format the table
-  ##     div_table$Awarded <- paste('$',formatC(div_table$Awarded, big.mark=',', format = 'f', digits=2))
-  ##     colnames(div_table) <- c("Division", "Count", "Amount Awarded")
-  ##     print(div_table)
-  ##   })
+    # Format the table
+    colnames(div_table) <- c("Division", "Count", "Amount Awarded")
+    print(div_table)
+  })
 
-  ##   ####################################################
-  ##   ########## Organization Type Stats Table ###########
-  ##   ####### Includes count of organization types #######
-  ##   ####################################################
-  ##   output$summaryTable4 <- DT::renderDT({
-  ##     # Filter data based on selected state and year
-  ##     state_data <- df_clean
-  ##     if (input$state != "All") {
-  ##       state_data <- state_data %>% filter(state == input$state)
-  ##     }
-  ##     if (input$year != "All") {
-  ##       state_data <- state_data %>% filter(YearAwarded == as.numeric(input$year))
-  ##       if (nrow(state_data) == 0) {
-  ##         return(data.frame("Message" = "No Data Available"))
-  ##       }
-  ##     }
+  ####################################################
+  ########## Organization Type Stats Table ###########
+  ####### Includes count of organization types #######
+  ####################################################
+  output$summaryTable4 <- DT::renderDT({
+    # Filter data based on selected state and year
+    neh_data <- df
+    if (input$state != "All") {
+      neh_data <- neh_data |> filter(state == input$state)
+    }
+    if (input$year != "All") {
+      neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
+      if (nrow(neh_data) == 0) {
+        return(data.frame("Message" = "No Data Available"))
+      }
+    }
 
-  ##     # Create organization type summary stats
-  ##     org_table <- state_data %>%
-  ##       group_by(OrganizationType) %>%
-  ##       summarise(Count = n(), Awarded = sum(OriginalAmount, na.rm=T)) %>%
-  ##       arrange(desc(Awarded))
+    # Create organization type summary stats
+    org_table <- neh_data |>
+      group_by(org_type) |>
+      summarise(count = n(),
+                awarded = sum(totaward, na.rm = TRUE)) |>
+      arrange(desc(awarded)) |>
+      mutate(awarded = scales::dollar(awarded))
 
-  ##     # Format the table
-  ##     org_table$Awarded <- paste('$',formatC(org_table$Awarded, big.mark=',', format = 'f', digits=2))
-  ##     colnames(org_table) <- c("Organization", "Count", "Amount Awarded")
-  ##     print(org_table)
-  ##   })
+    # Format the table
+    colnames(org_table) <- c("Organization", "Count", "Amount Awarded")
+    print(org_table)
+  })
 
-  ##   ####################################################
-  ##   ########### Awardee Information Table ##############
-  ##   ## Includes institution, project title, and award ##
-  ##   ####################################################
-  ##   output$summaryTable5 <- DT::renderDT({
-  ##     # Filter data based on selected state and year
-  ##     state_data <- df_clean
-  ##     if (input$state != "All") {
-  ##       state_data <- state_data %>% filter(state == input$state)
-  ##     }
-  ##     if (input$year != "All") {
-  ##       state_data <- state_data %>% filter(YearAwarded == as.numeric(input$year))
-  ##       if (nrow(state_data) == 0) {
-  ##         return(data.frame("Message" = "No Data Available"))
-  ##       }
-  ##     }
+  ####################################################
+  ########### Awardee Information Table ##############
+  ## Includes institution, project title, and award ##
+  ####################################################
+  output$summaryTable5 <- DT::renderDT({
+    # Filter data based on selected state and year
+    neh_data <- df
+    if (input$state != "All") {
+      neh_data <- neh_data |> filter(state == input$state)
+    }
+    if (input$year != "All") {
+      neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
+      if (nrow(neh_data) == 0) {
+        return(data.frame("Message" = "No Data Available"))
+      }
+    }
 
-  ##     # Create summary table
-  ##     award_table <- state_data %>%
-  ##       mutate(total_award = ifelse(OriginalAmount == 0, ApprovedOutright, OriginalAmount),
-  ##              CARES = ifelse(CARES == 1, "Yes", "No")) %>%
-  ##       select(Institution, YearAwarded, ProjectTitle, total_award, CARES, City, State, County)
+    # Create summary table
+    award_table <- neh_data |>
+      mutate(awarded = scales::dollar(totaward)) |>
+      select(institution, yearawarded, title, awarded, instcity, stname, county)
 
-  ##     # Format the table
-  ##     award_table$total_award <- paste('$',formatC(award_table$total_award,
-  ##                                                  big.mark=',', format = 'f', digits=2))
-  ##     colnames(award_table) <- c("Institution", "Year", "Project Title", "Award Amount", "CARES/ARP Award?",
-  ##                                "City", "State", "County")
-  ##     award_table[] <- lapply(award_table, as.character)
-  ##     print(award_table)
-  ##   })
-    
+
+    # Format the table
+    colnames(award_table) <- c("Institution", "Year", "Project Title",
+                               "Award Amount", "City", "State", "County")
+    award_table[] <- lapply(award_table, as.character)
+    print(award_table)
+  })
 }
 
 ## -----------------------------------------------------------------------------

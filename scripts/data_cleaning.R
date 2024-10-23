@@ -174,9 +174,14 @@ df_grant <- df_grant |>
     TRUE ~ primarydiscipline
   ))
 
-## filter our humanities councils
+## filter our humanities councils and fix missing orgs
 df_grant <- df_grant |>
-  filter(!grepl("Humanities Council", organizationtype))
+  filter(!grepl("Humanities Council", organizationtype)) |>
+  mutate(org_type = case_when(
+    is.na(organizationtype) & applicanttype == 2 ~ "Individual",
+    is.na(organizationtype) & applicanttype == 1 ~ "Unspecified",
+    TRUE ~ organizationtype
+    ))
 
 ## some programs receive $0 in award outright, so need to check awardmatch
 ## first, then if that 0, approved outright
@@ -186,6 +191,8 @@ df_grant <- df_grant |>
     awardoutright == 0 & awardmatching > 0 ~ awardmatching,
     awardoutright > 0 ~ awardoutright)
     )
+
+
 
 ## -----------------------------------------------------------------------------
 ## Cleaning, subsetting BLS economic data for Appalachian States and merging
@@ -375,7 +382,7 @@ df_grant_ipeds <- df_grant_unitid |>
 df <- df_grant_ipeds |>
   left_join(df_eco, by = c("fips", "yearawarded" = "year")) |>
   left_join(cw_st_app |> select(stabbr, stname), by = c("inststate" = "stabbr")) |>
-  select(appnumber, unitid, institution, orgtype = organizationtype, ccb, hbcu,
+  select(appnumber, unitid, institution, org_type, ccb, hbcu,
          instcity, inststate, stname, county, appalachia, fips, zip,
          lon, lat, yearawarded, title = projecttitle, program, division,
          totaward, parent_discipline, primarydiscipline,
