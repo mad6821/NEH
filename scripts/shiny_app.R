@@ -111,7 +111,9 @@ map_st <- st_as_sf(maps::map("state", fill = TRUE, plot = FALSE)) |>
 ## -----------------------------------------------------------------------------
 # Define UI
 ui <- fluidPage(
-  # Use inline CSS to center the content
+  ## -------------------------------------
+  ## inline CSS to center header content
+  ## -------------------------------------
   tags$head(
     tags$style(HTML("
       .centered-panel {
@@ -140,7 +142,9 @@ ui <- fluidPage(
     "))
   ),
   
-  # Create a fluid row to contain centered main panel
+  ## -------------------------------------
+  ## fluid row for main panel (inputs)
+  ## -------------------------------------
   fluidRow(
     div(
       class = "centered-panel",
@@ -174,8 +178,10 @@ ui <- fluidPage(
       ) # end of main panel
     ) # end of text div
   ), # end of fluid row
-    
-    # Main panel leaflet map (first column)
+  
+  ## -------------------------------------
+  ## Main panel leaflet map
+  ## -------------------------------------
     column(width = 8, offset = 0, 
            div(style='margin-right:-10em;'),
       mainPanel(
@@ -188,8 +194,10 @@ ui <- fluidPage(
         ) # end of fluid row
       ) # end of main panel
     ), # end of column
-    
-    # Summary tables panel (second column)
+  
+  ## -------------------------------------
+  ## main panel summary tables
+  ## -------------------------------------
     column(width = 4, offset = 0, 
            style='margin-left:-10em;',
       tabsetPanel( 
@@ -412,14 +420,17 @@ server <- function(input, output, session) {
                  className = "map-title")
   })
   
-  ####################################################################################################
-  ####################################### AWARD OVERVIEW TAB #########################################
-  ####################################################################################################
+  ## ---------------------------------------------------------------------------
+  ## tables
+  ## ---------------------------------------------------------------------------
+  
+  ## ---------------------------------------------------------------------------
+  ## award overview
+  ## ---------------------------------------------------------------------------
 
-  ####################################################
-  ################# Award Table ######################
-  #### Includes count of awards, max, and average ####
-  ####################################################
+  ## -------------------------------------
+  ## award overview table
+  ## -------------------------------------
   output$summaryTable1 <- renderTable({
     neh_data <- df
     if (input$state != "All") {
@@ -447,14 +458,13 @@ server <- function(input, output, session) {
     print(summary_table)
   })
 
-  ####################################################################################################
-  ################################ DIVISION/DISCIPLINE STATISTICS TAB ################################
-  ####################################################################################################
+  ## ---------------------------------------------------------------------------
+  ## divisions and disciplines
+  ## ---------------------------------------------------------------------------
 
-  ####################################################
-  ########### Discipline Statistics Table ############
-  ########## Includes count & amount awarded #########
-  ####################################################
+  ## -------------------------------------
+  ## discipline overview table
+  ## -------------------------------------
   output$summaryTable2 <- renderTable({
     neh_data <- df
     if (input$state != "All") {
@@ -481,10 +491,9 @@ server <- function(input, output, session) {
     print(disc_table)
   })
 
-  ####################################################
-  ############ Division Statistics Table #############
-  ######### Includes count & amount awarded ##########
-  ####################################################
+  ## -------------------------------------
+  ## division overview table
+  ## -------------------------------------
   output$summaryTable3 <- renderTable({
     neh_data <- df
     if (input$state != "All") {
@@ -511,14 +520,13 @@ server <- function(input, output, session) {
     print(div_table)
   })
   
-  ####################################################################################################
-  ################################## ORGANIZATION STATISTICS TAB #####################################
-  ####################################################################################################
+  ## ---------------------------------------------------------------------------
+  ## organizations
+  ## ---------------------------------------------------------------------------
   
-  ####################################################
-  ############# IPEDS Statistics Table ###############
-  ###### Includes Includes count & amount awarded ####
-  ####################################################
+  ## -------------------------------------
+  ## ipeds overview table
+  ## -------------------------------------
   output$summaryTable4 <- renderTable({
     neh_data <- df
     if (input$state != "All") {
@@ -559,10 +567,9 @@ server <- function(input, output, session) {
     
   })
   
-  ####################################################
-  ################# HBCU Stats Table #################
-  ####### Includes count of organization types #######
-  ####################################################
+  ## -------------------------------------
+  ## hbcu overview table
+  ## -------------------------------------
   output$summaryTable5 <- renderTable({
     # Filter data based on selected state and year
     neh_data <- df
@@ -590,10 +597,9 @@ server <- function(input, output, session) {
     print(hbcu_table[,2:3])
   })
   
-  ####################################################
-  ########## Organization Type Stats Table ###########
-  ####### Includes count of organization types #######
-  ####################################################
+  ## -------------------------------------
+  ## other orgs overview table
+  ## -------------------------------------
   output$summaryTable6 <- DT::renderDT({
     # Filter data based on selected state and year
     neh_data <- df
@@ -624,14 +630,12 @@ server <- function(input, output, session) {
   })
   
 
-  ####################################################################################################
-  ################################# AWARDEE STATISTICS TAB ###########################################
-  ####################################################################################################
-
-  ####################################################
-  ########### Awardee Information Table ##############
-  ## Includes institution, project title, and award ##
-  ####################################################
+  ## ---------------------------------------------------------------------------
+  ## awardees
+  ## ---------------------------------------------------------------------------
+  ## -------------------------------------
+  ## awardee overview table
+  ## -------------------------------------
   output$summaryTable7 <- DT::renderDT({
     # Filter data based on selected state and year
     neh_data <- df
