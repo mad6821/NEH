@@ -104,16 +104,16 @@ df_grant <- map(files,
          lat = ifelse(!is.na(latitude), latitude, ziplat))
 
 ## recode disciplines
-## TODO: need to double check regexes
 df_grant <- df_grant |>
   mutate(parent_discipline = case_when(
     ## art
     str_detect(primarydiscipline, paste("Art",
                                         "Dance",
                                         "Film",
+                                        "Music",
                                         "Arts",
                                         "Media",
-                                        "Theatre",
+                                        "Theater",
                                         "Ethnomusicology",
                                         "Aesthetics",
                                         sep = "|")) ~ "Arts",
@@ -163,6 +163,7 @@ df_grant <- df_grant |>
                                         "Psychology",
                                         "Sociology",
                                         "Economics",
+                                        "Gender",
                                         sep = "|")) ~ "Social Science",
     ## interdisciplinary
     str_detect(primarydiscipline, "Interdisciplinary") ~ "Interdisciplinary",
