@@ -453,6 +453,8 @@ server <- function(input, output, session) {
     # Create organization type summary stats
     org_table <- neh_data |>
       subset(appalachia == 1) |>
+      filter(!org_type %in% c("Four-Year College", "Two-Year College", 
+                              "University", "Professional School")) |>
       group_by(org_type) |>
       summarise(count = n(),
                 awarded = sum(totaward, na.rm = TRUE)) |>

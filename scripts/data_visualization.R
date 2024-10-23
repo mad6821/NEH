@@ -291,16 +291,12 @@ ggsave(filename = file.path(fig_dir, "unemp_map.png"),
 ## ------------------------------------
 summary_table <- df |>
   subset(appalachia == 1) |>
-  summarise(
-    Total_Grants = n(),
-    Total_Amount = sum(ao, na.rm = TRUE),
-    Average_Amount = mean(ao, na.rm = TRUE),
-    Max_Amount = max(ao, na.rm = TRUE)
-  ) |>
-  select(Total_Grants, Total_Amount, Average_Amount, Max_Amount) |> 
-  mutate(Total_Amount = paste('$',formatC(Total_Amount, big.mark=',', format = 'f', digits=2)),
-         Average_Amount = paste('$',formatC(Average_Amount, big.mark=',', format = 'f', digits=2)),
-         Max_Amount = paste('$',formatC(Max_Amount, big.mark=',', format = 'f', digits=2)))
+  summarise(total_grants = n(),
+            total_award = sum(totaward, na.rm = TRUE),
+            average_award = mean(totaward, na.rm = TRUE),
+            max_award = max(totaward, na.rm = TRUE)) |>
+  select(total_grants, total_award, average_award, max_award) |>
+  mutate(across(ends_with("_award"), ~ scales::dollar(.x)))
 
 colnames(summary_table) <- c("Total Grants", "Total Awarded", "Average", "Max")
 summary_table[] <- lapply(summary_table, as.character)
@@ -312,11 +308,14 @@ print(summary_table)
 
 disc_table <- df |>
   subset(appalachia == 1) |>
-  group_by(newdiscipline) |>
-  summarise(Count = n(), Awarded = sum(ao)) |>
-  arrange(desc(Count)) |> 
-  mutate(Awarded = paste('$',formatC(Awarded, big.mark=',', format = 'f', digits=2)))
+  group_by(parent_discipline) |>
+  summarise(count = n(),
+            awarded = sum(totaward, na.rm = TRUE)) |>
+  arrange(desc(awarded)) |>
+  mutate(awarded = scales::dollar(awarded))
 
+# Format the table
+colnames(disc_table) <- c("Discipline", "Count", "Amount Awarded")
 print(disc_table)
 
 ## -------------------------------------
@@ -326,24 +325,31 @@ print(disc_table)
 div_table <- df |>
   subset(appalachia == 1) |>
   group_by(division) |>
-  summarise(Count = n(), Awarded = sum(ao)) |>
-  arrange(desc(Count)) |>
-  mutate(Awarded = paste('$',formatC(Awarded, big.mark=',', format = 'f', digits=2)))
+  summarise(count = n(),
+            awarded = sum(totaward, na.rm = TRUE)) |>
+  arrange(desc(awarded)) |>
+  mutate(awarded = scales::dollar(awarded))
 
+# Format the table
+colnames(div_table) <- c("Division", "Count", "Amount Awarded")
 print(div_table)
 
 ## -------------------------------------
 ## Organizations Overview 
 ## ------------------------------------
 
-## TODO: should college and universities be removed from this since we have the ipeds table? 
 org_table <- df |>
   subset(appalachia == 1) |>
-  group_by(orgtype) |>
-  summarise(Count = n(), Awarded = sum(ao)) |>
-  arrange(desc(Awarded)) |>
-  mutate(Awarded = paste('$',formatC(Awarded, big.mark=',', format = 'f', digits=2)))
+  filter(!org_type %in% c("Four-Year College", "Two-Year College", 
+                          "University", "Professional School")) |>
+  group_by(org_type) |>
+  summarise(count = n(),
+            awarded = sum(totaward, na.rm = TRUE)) |>
+  arrange(desc(awarded)) |>
+  mutate(awarded = scales::dollar(awarded))
 
+# Format the table
+colnames(org_table) <- c("Organization", "Count", "Amount Awarded")
 print(org_table)
 
 ## -------------------------------------
@@ -366,10 +372,13 @@ ipeds_table <- df |>
     .default = as.character(ccb)
   )) |>
   group_by(ccnames) |>
-  summarise(Count = n(), Awarded = sum(ao)) |>
-  arrange(desc(Awarded)) |>
-  mutate(Awarded = paste('$',formatC(Awarded, big.mark=',', format = 'f', digits=2)))
+  summarise(count = n(), 
+            awarded = sum(totaward, na.rm = TRUE)) |>
+  arrange(desc(awarded)) |>
+  mutate(awarded = scales::dollar(awarded))
 
+# Format the table
+colnames(ipeds_table) <- c("HEI", "Count", "Amount Awarded")
 print(ipeds_table)
 
 ## -------------------------------------
@@ -384,11 +393,17 @@ hbcu_table <- df |>
   arrange(desc(awarded)) |>
   mutate(awarded = scales::dollar(awarded))
 
-hbcu_table <- df |>
-  subset(hbcu == 1 & appalachia == 1) |>
-  group_by(hbcu) %>% # need to add in HBCU and Tribals
-  summarise(Count = n(), Awarded = sum(ao)) |>
-  arrange(desc(Awarded)) |>
-  mutate(Awarded = paste('$',formatC(Awarded, big.mark=',', format = 'f', digits=2)))
+## -------------------------------------
+## Awardee Table Overview 
+## ------------------------------------
+award_table <- df |>
+  subset(appalachia == 1) |>
+  mutate(awarded = scales::dollar(totaward)) |>
+  select(institution, yearawarded, title, awarded, instcity, stname, county)
 
-print(hbcu_table[,2:3])
+
+# Format the table
+colnames(award_table) <- c("Institution", "Year", "Project Title",
+                           "Award Amount", "City", "State", "County")
+award_table[] <- lapply(award_table, as.character)
+print(award_table)
