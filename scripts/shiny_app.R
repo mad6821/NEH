@@ -396,7 +396,7 @@ server <- function(input, output, session) {
   output$summaryTable3 <- renderTable({
     neh_data <- df
     if (input$state != "All") {
-      neh_data <- neh_data |> filter(state == input$state)
+      neh_data <- neh_data |> filter(stname == input$state)
     }
     if (input$year != "All") {
       neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
@@ -427,7 +427,7 @@ server <- function(input, output, session) {
     # Filter data based on selected state and year
     neh_data <- df
     if (input$state != "All") {
-      neh_data <- neh_data |> filter(state == input$state)
+      neh_data <- neh_data |> filter(stname == input$state)
     }
     if (input$year != "All") {
       neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
@@ -458,7 +458,7 @@ server <- function(input, output, session) {
     # Filter data based on selected state and year
     neh_data <- df
     if (input$state != "All") {
-      neh_data <- neh_data |> filter(state == input$state)
+      neh_data <- neh_data |> filter(stname == input$state)
     }
     if (input$year != "All") {
       neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
