@@ -378,6 +378,14 @@ print(ipeds_table)
 
 hbcu_table <- df |>
   subset(hbcu == 1 & appalachia == 1) |>
+  group_by(hbcu) |>
+  summarise(count = n(),
+            awarded = sum(totaward, na.rm = TRUE)) |>
+  arrange(desc(awarded)) |>
+  mutate(awarded = scales::dollar(awarded))
+
+hbcu_table <- df |>
+  subset(hbcu == 1 & appalachia == 1) |>
   group_by(hbcu) %>% # need to add in HBCU and Tribals
   summarise(Count = n(), Awarded = sum(ao)) |>
   arrange(desc(Awarded)) |>

@@ -143,7 +143,7 @@ ui <- fluidPage(
                           )
                  )
                  ),
-        tabPanel("Award Summary Statistics",
+        tabPanel("Award Details Statistics",
                  fluidRow(   # DISCIPLINES TABLE
                    column(width = 12,
                           h4("Disciplines Funded"),
@@ -160,15 +160,29 @@ ui <- fluidPage(
                    column(width = 12,
                           h4("Organizations Funded"),
                           DT::DTOutput("summaryTable4")
-                          )
+                   )
                  ),
+                 fluidRow(   # IPEDS TABLE
+                   column(width = 12,
+                          h4("HEIs Funded"),
+                          tableOutput("summaryTable5")
+                   )
+                 ),
+                 fluidRow(   # HBCU TABLE
+                   column(width = 12,
+                          h4("HBCUs Funded"),
+                          tableOutput("summaryTable6")
+                   )
+                 )
+                 ),
+        tabPanel("Awardee Information",
                  fluidRow(   # AWARDEE INFORMATION
                    column(width = 12,
                           h4("Individual Awardee Information"),
-                          DT::DTOutput("summaryTable5")
-                          )
-                 )
-                 )
+                          DT::DTOutput("summaryTable7")
+                    )
+                  )
+                  )
       )
     )
   )
@@ -325,7 +339,7 @@ server <- function(input, output, session) {
   })
 
   ####################################################
-  ########### Award & Econ Stats Table ###############
+  ################# Award Table ######################
   #### Includes count of awards, max, and average ####
   ####################################################
   output$summaryTable1 <- renderTable({
@@ -391,7 +405,7 @@ server <- function(input, output, session) {
 
   ####################################################
   ############ Division Statistics Table #############
-  ##### Includes count of disciplines & divisions ####
+  ######### Includes count & amount awarded ##########
   ####################################################
   output$summaryTable3 <- renderTable({
     neh_data <- df
@@ -418,7 +432,7 @@ server <- function(input, output, session) {
     colnames(div_table) <- c("Division", "Count", "Amount Awarded")
     print(div_table)
   })
-
+  
   ####################################################
   ########## Organization Type Stats Table ###########
   ####### Includes count of organization types #######
@@ -435,7 +449,7 @@ server <- function(input, output, session) {
         return(data.frame("Message" = "No Data Available"))
       }
     }
-
+    
     # Create organization type summary stats
     org_table <- neh_data |>
       subset(appalachia == 1) |>
@@ -444,17 +458,97 @@ server <- function(input, output, session) {
                 awarded = sum(totaward, na.rm = TRUE)) |>
       arrange(desc(awarded)) |>
       mutate(awarded = scales::dollar(awarded))
-
+    
     # Format the table
     colnames(org_table) <- c("Organization", "Count", "Amount Awarded")
     print(org_table)
   })
+  
+  
+  ####################################################
+  ############# IPEDS Statistics Table ###############
+  ###### Includes Includes count & amount awarded ####
+  ####################################################
+  output$summaryTable5 <- renderTable({
+    neh_data <- df
+    if (input$state != "All") {
+      neh_data <- neh_data |> filter(stname == input$state)
+    }
+    if (input$year != "All") {
+      neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
+      if (nrow(neh_data) == 0) {
+        return(data.frame("Message" = "No Data Available"))
+      }
+    }
+    
+    # Create ipeds summary stats
+    ipeds_table <- neh_data |>
+      subset(appalachia == 1) |>
+      drop_na(ccb) |>
+      mutate(ccnames = case_when( # Only coded the HEIs we actually have
+        ccb == 1 ~ "Associate’s - Public", 
+        ccb == 2 ~ "Associate’s - Private",
+        ccb == 3 ~ "Research University (Very High)",
+        ccb == 4 ~ "Research University (High)",
+        ccb == 5 ~ "Doctoral/Research University",
+        ccb == 6 ~ "Master’s (Large)",
+        ccb == 7 ~ "Master’s (Medium)",
+        ccb == 8 ~ "Master’s (Small)",
+        ccb == 9 ~ "Baccalaureate Colleges",
+        .default = as.character(ccb)
+      )) |>
+      group_by(ccnames) |>
+      summarise(count = n(), 
+                awarded = sum(totaward, na.rm = TRUE)) |>
+      arrange(desc(awarded)) |>
+      mutate(awarded = scales::dollar(awarded))
+    
+    # Format the table
+    colnames(ipeds_table) <- c("HEI", "Count", "Amount Awarded")
+    print(ipeds_table)
+    
+  })
+  
+  ####################################################
+  ################# HBCU Stats Table #################
+  ####### Includes count of organization types #######
+  ####################################################
+  output$summaryTable6 <- DT::renderDT({
+    # Filter data based on selected state and year
+    neh_data <- df
+    if (input$state != "All") {
+      neh_data <- neh_data |> filter(stname == input$state)
+    }
+    if (input$year != "All") {
+      neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
+      if (nrow(neh_data) == 0) {
+        return(data.frame("Message" = "No Data Available"))
+      }
+    }
+    
+    # Create hbcu summary stats
+    hbcu_table <- neh_data |>
+      subset(hbcu == 1 & appalachia == 1) |>
+      group_by(hbcu) |>
+      summarise(count = n(),
+                awarded = sum(totaward, na.rm = TRUE)) |>
+      arrange(desc(awarded)) |>
+      mutate(awarded = scales::dollar(awarded))
+    
+    # Format the table
+    colnames(hbcu_table) <- c("HBCU", "Count", "Amount Awarded")
+    print(hbcu_table[,2:3])
+  })
+
+  ####################################################################################################
+  ################################# AWARDEE STATISTICS TAB ###########################################
+  ####################################################################################################
 
   ####################################################
   ########### Awardee Information Table ##############
   ## Includes institution, project title, and award ##
   ####################################################
-  output$summaryTable5 <- DT::renderDT({
+  output$summaryTable7 <- DT::renderDT({
     # Filter data based on selected state and year
     neh_data <- df
     if (input$state != "All") {
