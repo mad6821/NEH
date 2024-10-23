@@ -106,7 +106,7 @@ df_grant <- map(files,
 ## recode disciplines
 ## TODO: need to double check regexes
 df_grant <- df_grant |>
-  mutate(newdiscipline = case_when(
+  mutate(parent_discipline = case_when(
     ## art
     str_detect(primarydiscipline, paste("Art",
                                         "Dance",
@@ -168,6 +168,8 @@ df_grant <- df_grant |>
     str_detect(primarydiscipline, "Interdisciplinary") ~ "Interdisciplinary",
     ## area studies
     str_detect(primarydiscipline, "Studies") ~ "Area Studies",
+    ## missing
+    is.na(primarydiscipline) ~ "Unspecified",
     ## < remainder >
     TRUE ~ primarydiscipline
   ))
@@ -376,7 +378,7 @@ df <- df_grant_ipeds |>
   select(appnumber, unitid, institution, orgtype = organizationtype, ccb, hbcu,
          instcity, inststate, stname, county, appalachia, fips, zip,
          lon, lat, yearawarded, title = projecttitle, program, division,
-         totaward, newdiscipline, primarydiscipline,
+         totaward, parent_discipline, primarydiscipline,
          disciplines, unemp_rate, poverty_rate)
 
 ## ----------------------
