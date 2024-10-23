@@ -44,14 +44,14 @@ app_st <- df_arc |>
   left_join(stcrosswalk |> select(stabbr, stname),
             by = c("state" = "stname"))
 
-## award period
-award_period <- df |> distinct(yearawarded) |> pull()
-
 ## -----------------------------------------------------------------------------
 ## read in data; pull aggregate data out; pull macros out
 ## -----------------------------------------------------------------------------
 
 df <- read_csv(file.path(dat_dir, "analysis.csv"), show_col_types = FALSE)
+
+## award period
+award_period <- df |> distinct(yearawarded) |> pull()
 
 ## ----------------------
 ## aggregate
@@ -513,7 +513,7 @@ server <- function(input, output, session) {
   ################# HBCU Stats Table #################
   ####### Includes count of organization types #######
   ####################################################
-  output$summaryTable6 <- DT::renderDT({
+  output$summaryTable6 <- renderTable({
     # Filter data based on selected state and year
     neh_data <- df
     if (input$state != "All") {
