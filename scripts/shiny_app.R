@@ -109,84 +109,158 @@ map_st <- st_as_sf(maps::map("state", fill = TRUE, plot = FALSE)) |>
 ## -----------------------------------------------------------------------------
 ## UI
 ## -----------------------------------------------------------------------------
-
+# Define UI
 ui <- fluidPage(
-  titlePanel("NEH Funding in the Appalachian Region"),
-  sidebarLayout(
-    sidebarPanel(
-      helpText("Welcome to a comprehensive dashboard of NEH funding in the Appalachian region. 
-               To explore, please use the drop down menus below to select a state and year."),
-      ## state dropdown menu
-      selectInput("state", "Select a State:",
-                  choices = c("All", app_st |> pull(state)),
-                  selected = "All", width = "200px"),
-      ## year dropdown menu
-      selectInput("year", "Select a Year:",
-                  choices = c("All", award_period),
-                  selected = "All", width = "200px")
-    ),
-    mainPanel(
-      ## main map (stays above)
-      fluidRow(    # COUNTIES MAP
-        column(width = 12,
-               h4("Appalachian Regional Map"),
-               leafletOutput("countyMap1")
-               )
-      ),
-      ## tabbed panels that with different output per tab
-      tabsetPanel(
+  # Use inline CSS to center the content
+  tags$head(
+    tags$style(HTML("
+      .centered-panel {
+        display: flex;
+        justify-content: center;
+        text-align: center;
+      }
+      .input-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .input-row label {
+        margin-right: 10px;
+        min-width: 100px;
+        text-align: right;
+      }
+      .centered-inputs {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .help-block {
+        color: black !important;
+      }
+    "))
+  ),
+  
+  # Create a fluid row to contain centered main panel
+  fluidRow(
+    div(
+      class = "centered-panel",
+      mainPanel(
+        wellPanel(
+          helpText("Welcome to a comprehensive dashboard of NEH funding in the Appalachian region. 
+                   To explore, please use the drop down menus below to select a state and year.")
+        ),
+        
+        # Centered inputs
+        div(
+          class = "centered-inputs",
+          # State dropdown menu (with text to the left)
+          div(
+            class = "input-row",
+            tags$label("Select a State:"),
+            selectInput("state", NULL,
+                        choices = c("All", app_st |> pull(state)),
+                        selected = "All", width = "200px")
+          ), # end of state div
+          
+          # Year dropdown menu (with text to the left)
+          div(
+            class = "input-row",
+            tags$label("Select a Year:"),
+            selectInput("year", NULL,
+                        choices = c("All", award_period),
+                        selected = "All", width = "200px")
+          ) # end of year div
+        ) # end of inputs div
+      ) # end of main panel
+    ) # end of text div
+  ), # end of fluid row
+    
+    # Main panel leaflet map (first column)
+    column(width = 8, offset = 0, 
+           div(style='margin-right:-10em;'),
+      mainPanel(
+        ## main map (stays above)
+        fluidRow(    # COUNTIES MAP
+          column(width = 12, 
+                 h4("Appalachian Regional Map"),
+                 leafletOutput("countyMap1")
+          ) # end of column
+        ) # end of fluid row
+      ) # end of main panel
+    ), # end of column
+    
+    # Summary tables panel (second column)
+    column(width = 4, offset = 0, 
+           style='margin-left:-10em;',
+      tabsetPanel( 
+      ## ---------------------------------------------------------------------
+      ## AWARD OVERVIEW ------------------------------------------------
+      ## ---------------------------------------------------------------------
         tabPanel("Overview of Awards Granted",
                  fluidRow(   # AWARDS STATS
                    column(width = 12,
                           h4("Award Overview"),
                           tableOutput("summaryTable1")
-                          )
-                 )
-                 ),
-        tabPanel("Award Details Statistics",
-                 fluidRow(   # DISCIPLINES TABLE
-                   column(width = 12,
+              ) # end of column
+            ) # end of fluid row
+          ), # end of tabPanel
+      ## ---------------------------------------------------------------------
+      ## DIV/DISCP OVERVIEW ------------------------------------------------
+      ## ---------------------------------------------------------------------
+        tabPanel("Overview of Divisions & Disciplines", 
+                fluidRow(   # DISCIPLINES TABLE
+                    column(width = 12,
                           h4("Disciplines Funded"),
                           tableOutput("summaryTable2")
-                          )
-                 ),
-                 fluidRow(   # DIVISIONS TABLE
-                   column(width = 12,
+            ) # end of column
+          ), # end of fluid row
+                fluidRow(   # DIVISIONS TABLE
+                    column(width = 12,
                           h4("Divisions Funded"),
                           tableOutput("summaryTable3")
-                          )
-                 ),
-                 fluidRow(   # ORGANIZATION TYPE TABLE
-                   column(width = 12,
-                          h4("Organizations Funded"),
-                          DT::DTOutput("summaryTable4")
-                   )
-                 ),
-                 fluidRow(   # IPEDS TABLE
-                   column(width = 12,
-                          h4("HEIs Funded"),
-                          tableOutput("summaryTable5")
-                   )
-                 ),
-                 fluidRow(   # HBCU TABLE
-                   column(width = 12,
-                          h4("HBCUs Funded"),
-                          tableOutput("summaryTable6")
-                   )
-                 )
-                 ),
-        tabPanel("Awardee Information",
-                 fluidRow(   # AWARDEE INFORMATION
-                   column(width = 12,
-                          h4("Individual Awardee Information"),
-                          DT::DTOutput("summaryTable7")
-                    )
-                  )
-                  )
-      )
-    )
-  )
-)
+              ) # end of column
+            ) # end of fluid row
+          ), # end of tabPanel
+      
+      ## -------------------------------------------------------------------
+      ## ORGS OVERVIEW ------------------------------------------------
+      ## -------------------------------------------------------------------
+        tabPanel("Overview of Organizations", 
+          fluidRow(   # IPEDS TABLE
+            column(width = 12,
+                   h4("HEIs Funded"),
+                   tableOutput("summaryTable4")
+            ) # end of column
+          ), # end of fluid row
+          fluidRow(   # HBCU TABLE
+            column(width = 12,
+                   h4("HBCUs Funded"),
+                   tableOutput("summaryTable5")
+            ) # end of column
+          ), # end of fluid row
+          fluidRow(   # ORGANIZATION TYPE TABLE
+            column(width = 12,
+                   h4("Organizations Funded"),
+                   DT::DTOutput("summaryTable6")
+            ) # end of column
+          ) # end of fluid row
+        ), # end of tabPanel
+      
+      ## ---------------------------------------------------------------------
+      ## AWARDEE OVERVIEW ------------------------------------------------
+      ## ---------------------------------------------------------------------
+        tabPanel("Overview of Awardees",
+          fluidRow(   # AWARDEE INFORMATION
+            column(width = 12,
+                    h4("Individual Awardee Information"),
+                   DT::DTOutput("summaryTable7")
+            ) # end of column
+          ) # end of fluid row
+        ) # end of tabPanel
+      ) # end of tabsetPanel
+    ) # end of column
+  ) # end of fluid page
+
 
 ## -----------------------------------------------------------------------------
 ## server
@@ -337,6 +411,10 @@ server <- function(input, output, session) {
                  position = "topleft",
                  className = "map-title")
   })
+  
+  ####################################################################################################
+  ####################################### AWARD OVERVIEW TAB #########################################
+  ####################################################################################################
 
   ####################################################
   ################# Award Table ######################
@@ -370,7 +448,7 @@ server <- function(input, output, session) {
   })
 
   ####################################################################################################
-  ################################# SUMMARY STATISTICS TAB ###########################################
+  ################################ DIVISION/DISCIPLINE STATISTICS TAB ################################
   ####################################################################################################
 
   ####################################################
@@ -433,45 +511,15 @@ server <- function(input, output, session) {
     print(div_table)
   })
   
-  ####################################################
-  ########## Organization Type Stats Table ###########
-  ####### Includes count of organization types #######
-  ####################################################
-  output$summaryTable4 <- DT::renderDT({
-    # Filter data based on selected state and year
-    neh_data <- df
-    if (input$state != "All") {
-      neh_data <- neh_data |> filter(stname == input$state)
-    }
-    if (input$year != "All") {
-      neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
-      if (nrow(neh_data) == 0) {
-        return(data.frame("Message" = "No Data Available"))
-      }
-    }
-    
-    # Create organization type summary stats
-    org_table <- neh_data |>
-      subset(appalachia == 1) |>
-      filter(!org_type %in% c("Four-Year College", "Two-Year College", 
-                              "University", "Professional School")) |>
-      group_by(org_type) |>
-      summarise(count = n(),
-                awarded = sum(totaward, na.rm = TRUE)) |>
-      arrange(desc(awarded)) |>
-      mutate(awarded = scales::dollar(awarded))
-    
-    # Format the table
-    colnames(org_table) <- c("Organization", "Count", "Amount Awarded")
-    print(org_table)
-  })
-  
+  ####################################################################################################
+  ################################## ORGANIZATION STATISTICS TAB #####################################
+  ####################################################################################################
   
   ####################################################
   ############# IPEDS Statistics Table ###############
   ###### Includes Includes count & amount awarded ####
   ####################################################
-  output$summaryTable5 <- renderTable({
+  output$summaryTable4 <- renderTable({
     neh_data <- df
     if (input$state != "All") {
       neh_data <- neh_data |> filter(stname == input$state)
@@ -515,7 +563,7 @@ server <- function(input, output, session) {
   ################# HBCU Stats Table #################
   ####### Includes count of organization types #######
   ####################################################
-  output$summaryTable6 <- renderTable({
+  output$summaryTable5 <- renderTable({
     # Filter data based on selected state and year
     neh_data <- df
     if (input$state != "All") {
@@ -541,6 +589,40 @@ server <- function(input, output, session) {
     colnames(hbcu_table) <- c("HBCU", "Count", "Amount Awarded")
     print(hbcu_table[,2:3])
   })
+  
+  ####################################################
+  ########## Organization Type Stats Table ###########
+  ####### Includes count of organization types #######
+  ####################################################
+  output$summaryTable6 <- DT::renderDT({
+    # Filter data based on selected state and year
+    neh_data <- df
+    if (input$state != "All") {
+      neh_data <- neh_data |> filter(stname == input$state)
+    }
+    if (input$year != "All") {
+      neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
+      if (nrow(neh_data) == 0) {
+        return(data.frame("Message" = "No Data Available"))
+      }
+    }
+    
+    # Create organization type summary stats
+    org_table <- neh_data |>
+      subset(appalachia == 1) |>
+      filter(!org_type %in% c("Four-Year College", "Two-Year College", 
+                              "University", "Professional School")) |>
+      group_by(org_type) |>
+      summarise(count = n(),
+                awarded = sum(totaward, na.rm = TRUE)) |>
+      arrange(desc(awarded)) |>
+      mutate(awarded = scales::dollar(awarded))
+    
+    # Format the table
+    colnames(org_table) <- c("Organization", "Count", "Amount Awarded")
+    print(org_table)
+  })
+  
 
   ####################################################################################################
   ################################# AWARDEE STATISTICS TAB ###########################################
