@@ -19,13 +19,6 @@ fig_dir <- file.path(root, "figures")
 scr_dir <- file.path(root, "scripts")
 tab_dir <- file.path(root, "tables")
 
-# Load libraries
-## library(plotly)
-## library(formattable)
-## library(vtable)
-## library(scales)
-## library(htmltools)
-
 ## -------------------------------------
 ## set CRS
 ## -------------------------------------
