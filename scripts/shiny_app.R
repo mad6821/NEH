@@ -141,7 +141,7 @@ ui <- fluidPage(
       .help-block {
         color: black !important;
       }
-      .leaflet-control .legend .leaflet-legend-labels {
+     .leaflet-control .legend .leaflet-legend-labels {
         display: flex; !important
         align-items: center;
         font-size: 10px;
@@ -313,7 +313,7 @@ server <- function(input, output, session) {
         font-size: 14px;
       }
     "))
-
+    
     ## -------------------------------------
     ## filter on state (or all)
     ## -------------------------------------

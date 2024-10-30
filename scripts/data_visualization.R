@@ -298,11 +298,9 @@ summary_table <- df |>
   select(total_grants, total_award, average_award, max_award) |>
   mutate(across(ends_with("_award"), ~ scales::dollar(.x)))
 
-colnames(summary_table) <- c("Total Grants", "Total Awarded", "Average", "Max")
-summary_table[] <- lapply(summary_table, as.character)
-
-knitr::kable(summary_table, booktabs=T)
-print(summary_table)
+knitr::kable(summary_table, align = "lrrr", 
+             col.names = c("Total Grants", "Total Awarded", "Average", "Max")) |>
+  kable_styling("striped", full_width = F) 
 
 ## -------------------------------------
 ## Disciplines Overview 
@@ -316,9 +314,9 @@ disc_table <- df |>
   arrange(desc(awarded)) |>
   mutate(awarded = scales::dollar(awarded))
 
-# Format the table
-colnames(disc_table) <- c("Discipline", "Count", "Amount Awarded")
-print(disc_table)
+knitr::kable(disc_table, align = "lrrr", 
+             col.names = c("Discipline", "Count", "Amount Awarded")) |>
+  kable_styling("striped", full_width = F) 
 
 ## -------------------------------------
 ## Divisions Overview 
@@ -332,9 +330,9 @@ div_table <- df |>
   arrange(desc(awarded)) |>
   mutate(awarded = scales::dollar(awarded))
 
-# Format the table
-colnames(div_table) <- c("Division", "Count", "Amount Awarded")
-print(div_table)
+knitr::kable(disc_table, align = "lrrr", 
+             col.names = c("Division", "Count", "Amount Awarded")) |>
+  kable_styling("striped", full_width = F) 
 
 ## -------------------------------------
 ## Organizations Overview 
@@ -350,9 +348,9 @@ org_table <- df |>
   arrange(desc(awarded)) |>
   mutate(awarded = scales::dollar(awarded))
 
-# Format the table
-colnames(org_table) <- c("Organization", "Count", "Amount Awarded")
-print(org_table)
+knitr::kable(disc_table, align = "lrrr", 
+             col.names = c("Organization", "Count", "Amount Awarded")) |>
+  kable_styling("striped", full_width = F) 
 
 ## -------------------------------------
 ## IPEDS HEI Overview 
@@ -379,9 +377,9 @@ ipeds_table <- df |>
   arrange(desc(awarded)) |>
   mutate(awarded = scales::dollar(awarded))
 
-# Format the table
-colnames(ipeds_table) <- c("HEI", "Count", "Amount Awarded")
-print(ipeds_table)
+knitr::kable(disc_table, align = "lrrr", 
+             col.names = c("HEI", "Count", "Amount Awarded")) |>
+  kable_styling("striped", full_width = F) 
 
 ## -------------------------------------
 ## HBCU HEI Overview 
@@ -393,7 +391,12 @@ hbcu_table <- df |>
   summarise(count = n(),
             awarded = sum(totaward, na.rm = TRUE)) |>
   arrange(desc(awarded)) |>
-  mutate(awarded = scales::dollar(awarded))
+  mutate(awarded = scales::dollar(awarded)) |> 
+  dplyr::select(-hbcu)
+
+knitr::kable(hbcu_table, align = "lrrr", 
+             col.names = c("Count", "Amount Awarded")) |>
+  kable_styling("striped", full_width = F) 
 
 ## -------------------------------------
 ## Awardee Table Overview 
@@ -403,9 +406,7 @@ award_table <- df |>
   mutate(awarded = scales::dollar(totaward)) |>
   select(institution, yearawarded, title, awarded, instcity, stname, county)
 
-
-# Format the table
-colnames(award_table) <- c("Institution", "Year", "Project Title",
-                           "Award Amount", "City", "State", "County")
-award_table[] <- lapply(award_table, as.character)
-print(award_table)
+knitr::kable(award_table, align = "lllrlll", 
+             col.names = c("Institution", "Year", "Project Title",
+                           "Award Amount", "City", "State", "County")) |>
+  kable_styling("striped", full_width = F) 
