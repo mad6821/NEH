@@ -300,6 +300,8 @@ summary_table <- df |>
 
 colnames(summary_table) <- c("Total Grants", "Total Awarded", "Average", "Max")
 summary_table[] <- lapply(summary_table, as.character)
+
+knitr::kable(summary_table, booktabs=T)
 print(summary_table)
 
 ## -------------------------------------

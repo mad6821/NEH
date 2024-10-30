@@ -141,6 +141,24 @@ ui <- fluidPage(
       .help-block {
         color: black !important;
       }
+      .leaflet-control .legend .leaflet-legend-labels {
+        display: flex; !important
+        align-items: center;
+        font-size: 10px;
+      }
+      .leaflet .legend {
+        font-size: 10px;
+        padding: 4px;
+        line-height: 12px;
+        width: auto;
+      }
+      .leaflet .legend i{
+        width: 10px;
+        height: 8px;
+        margin-right: 2px;
+        float: left;
+        font-size: 8px;
+      }
     "))
   ),
   
@@ -285,14 +303,14 @@ server <- function(input, output, session) {
     # Title positioning using CSS
     tag.map.title <- tags$style(HTML("
       .leaflet-control.map-title {
-        transform: translate(-50%,20%);
+        transform: translate(-50%,-80%);
         left: 60%;
         text-align: center;
         padding-left: 5px;
         padding-right: 5px;
         background: rgba(255,255,255,0.75);
         font-weight: bold;
-        font-size: 16px;
+        font-size: 14px;
       }
     "))
 
@@ -431,106 +449,7 @@ server <- function(input, output, session) {
   ## award overview
   ## ---------------------------------------------------------------------------
 
-  ## -------------------------------------
-  ## award overview table
-  ## -------------------------------------
-  output$summaryTable1 <- renderTable({
-    neh_data <- df
-    if (input$state != "All") {
-      neh_data <- neh_data |> filter(stname == input$state)
-    }
-    if (input$year != "All") {
-      neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
-      if (nrow(neh_data) == 0) {
-        return(data.frame("Message" = "No Data Available"))
-      }
-    }
-
-    # Create summary table
-    summary_table <- neh_data |>
-      subset(appalachia == 1) |>
-      summarise(total_grants = n(),
-                total_award = sum(totaward, na.rm = TRUE),
-                average_award = mean(totaward, na.rm = TRUE),
-                max_award = max(totaward, na.rm = TRUE)) |>
-      select(total_grants, total_award, average_award, max_award) |>
-      mutate(across(ends_with("_award"), ~ scales::dollar(.x)))
-
-    colnames(summary_table) <- c("Total Grants", "Total Awarded", "Average", "Max")
-    summary_table[] <- lapply(summary_table, as.character)
-    print(summary_table)
-  })
-
-  ## ---------------------------------------------------------------------------
-  ## divisions and disciplines
-  ## ---------------------------------------------------------------------------
-
-  ## -------------------------------------
-  ## discipline overview table
-  ## -------------------------------------
-  output$summaryTable2 <- renderTable({
-    neh_data <- df
-    if (input$state != "All") {
-      neh_data <- neh_data |> filter(stname == input$state)
-    }
-    if (input$year != "All") {
-      neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
-      if (nrow(neh_data) == 0) {
-        return(data.frame("Message" = "No Data Available"))
-      }
-    }
-
-    # Create discipline summary stats
-    disc_table <- neh_data |>
-      subset(appalachia == 1) |>
-      group_by(parent_discipline) |>
-      summarise(count = n(),
-                awarded = sum(totaward, na.rm = TRUE)) |>
-      arrange(desc(awarded)) |>
-      mutate(awarded = scales::dollar(awarded))
-
-    # Format the table
-    colnames(disc_table) <- c("Discipline", "Count", "Amount Awarded")
-    print(disc_table)
-  })
-
-  ## -------------------------------------
-  ## division overview table
-  ## -------------------------------------
-  output$summaryTable3 <- renderTable({
-    neh_data <- df
-    if (input$state != "All") {
-      neh_data <- neh_data |> filter(stname == input$state)
-    }
-    if (input$year != "All") {
-      neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
-      if (nrow(neh_data) == 0) {
-        return(data.frame("Message" = "No Data Available"))
-      }
-    }
-
-    # Create division summary stats
-    div_table <- neh_data |>
-      subset(appalachia == 1) |>
-      group_by(division) |>
-      summarise(count = n(),
-                awarded = sum(totaward, na.rm = TRUE)) |>
-      arrange(desc(awarded)) |>
-      mutate(awarded = scales::dollar(awarded))
-
-    # Format the table
-    colnames(div_table) <- c("Division", "Count", "Amount Awarded")
-    print(div_table)
-  })
-  
-  ## ---------------------------------------------------------------------------
-  ## organizations
-  ## ---------------------------------------------------------------------------
-  
-  ## -------------------------------------
-  ## ipeds overview table
-  ## -------------------------------------
-  output$summaryTable4 <- renderTable({
+  output$summaryTable1 <- function() {
     neh_data <- df
     if (input$state != "All") {
       neh_data <- neh_data |> filter(stname == input$state)
@@ -542,8 +461,99 @@ server <- function(input, output, session) {
       }
     }
     
-    # Create ipeds summary stats
-    ipeds_table <- neh_data |>
+    neh_data |>
+      subset(appalachia == 1) |>
+      summarise(total_grants = n(),
+                total_award = sum(totaward, na.rm = TRUE),
+                average_award = mean(totaward, na.rm = TRUE),
+                max_award = max(totaward, na.rm = TRUE)) |>
+      select(total_grants, total_award, average_award, max_award) |>
+      mutate(across(ends_with("_award"), ~ scales::dollar(.x))) |>
+      knitr::kable("html", align = "lrrr", 
+                   col.names = c("Total Grants", "Total Awarded", "Average", "Max")) |>
+      kable_styling("striped", full_width = F) 
+  }
+
+  ## ---------------------------------------------------------------------------
+  ## divisions and disciplines
+  ## ---------------------------------------------------------------------------
+
+  ## -------------------------------------
+  ## discipline overview table
+  ## -------------------------------------
+  output$summaryTable2 <- function() {
+    neh_data <- df
+    if (input$state != "All") {
+      neh_data <- neh_data |> filter(stname == input$state)
+    }
+    if (input$year != "All") {
+      neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
+      if (nrow(neh_data) == 0) {
+        return(data.frame("Message" = "No Data Available"))
+      }
+    }
+    
+    neh_data |>
+      subset(appalachia == 1) |>
+      group_by(parent_discipline) |>
+      summarise(count = n(),
+                awarded = sum(totaward, na.rm = TRUE)) |>
+      arrange(desc(awarded)) |>
+      mutate(awarded = scales::dollar(awarded)) |>
+      knitr::kable("html", align = "lcr", 
+                   col.names = c("Discipline", "Count", "Amount Awarded")) |>
+      kable_styling("striped", full_width = F) 
+  }
+
+  ## -------------------------------------
+  ## division overview table
+  ## -------------------------------------
+  
+  output$summaryTable3 <- function() {
+    neh_data <- df
+    if (input$state != "All") {
+      neh_data <- neh_data |> filter(stname == input$state)
+    }
+    if (input$year != "All") {
+      neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
+      if (nrow(neh_data) == 0) {
+        return(data.frame("Message" = "No Data Available"))
+      }
+    }
+    
+    neh_data |>
+      subset(appalachia == 1) |>
+      group_by(division) |>
+      summarise(count = n(),
+                awarded = sum(totaward, na.rm = TRUE)) |>
+      arrange(desc(awarded)) |>
+      mutate(awarded = scales::dollar(awarded)) |>
+      knitr::kable("html", align = "lcr", 
+                   col.names = c("Division", "Count", "Amount Awarded")) |>
+      kable_styling("striped", full_width = F) 
+  }
+  
+  ## ---------------------------------------------------------------------------
+  ## organizations
+  ## ---------------------------------------------------------------------------
+  
+  ## -------------------------------------
+  ## ipeds overview table
+  ## -------------------------------------
+  
+  output$summaryTable4 <- function() {
+    neh_data <- df
+    if (input$state != "All") {
+      neh_data <- neh_data |> filter(stname == input$state)
+    }
+    if (input$year != "All") {
+      neh_data <- neh_data |> filter(yearawarded == as.numeric(input$year))
+      if (nrow(neh_data) == 0) {
+        return(data.frame("Message" = "No Data Available"))
+      }
+    }
+    
+    neh_data |>
       subset(appalachia == 1) |>
       drop_na(ccb) |>
       mutate(ccnames = case_when( # Only coded the HEIs we actually have
@@ -562,19 +572,17 @@ server <- function(input, output, session) {
       summarise(count = n(), 
                 awarded = sum(totaward, na.rm = TRUE)) |>
       arrange(desc(awarded)) |>
-      mutate(awarded = scales::dollar(awarded))
-    
-    # Format the table
-    colnames(ipeds_table) <- c("HEI", "Count", "Amount Awarded")
-    print(ipeds_table)
-    
-  })
+      mutate(awarded = scales::dollar(awarded)) |>
+      knitr::kable("html", align = "lcr", 
+                   col.names = c("HEI", "Count", "Amount Awarded")) |>
+      kable_styling("striped", full_width = F) 
+  }
   
   ## -------------------------------------
   ## hbcu overview table
   ## -------------------------------------
-  output$summaryTable5 <- renderTable({
-    # Filter data based on selected state and year
+  
+  output$summaryTable5 <- function() {
     neh_data <- df
     if (input$state != "All") {
       neh_data <- neh_data |> filter(stname == input$state)
@@ -586,25 +594,24 @@ server <- function(input, output, session) {
       }
     }
     
-    # Create hbcu summary stats
-    hbcu_table <- neh_data |>
+    neh_data |>
       subset(hbcu == 1 & appalachia == 1) |>
       group_by(hbcu) |>
       summarise(count = n(),
                 awarded = sum(totaward, na.rm = TRUE)) |>
       arrange(desc(awarded)) |>
-      mutate(awarded = scales::dollar(awarded))
-    
-    # Format the table
-    colnames(hbcu_table) <- c("HBCU", "Count", "Amount Awarded")
-    print(hbcu_table[,2:3])
-  })
+      mutate(awarded = scales::dollar(awarded)) |>
+      dplyr::select(-hbcu) |>
+      knitr::kable("html", align = "lcr", 
+                   col.names = c("Count", "Amount Awarded")) |>
+      kable_styling("striped", full_width = F) 
+  }
+  
   
   ## -------------------------------------
   ## other orgs overview table
   ## -------------------------------------
   output$summaryTable6 <- DT::renderDT({
-    # Filter data based on selected state and year
     neh_data <- df
     if (input$state != "All") {
       neh_data <- neh_data |> filter(stname == input$state)
