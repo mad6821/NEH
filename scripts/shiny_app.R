@@ -214,15 +214,14 @@ ui <- fluidPage(
                  leafletOutput("countyMap1")
           ) # end of column
         ), # end of fluid row
-      
       ## ---------------------------------------------------------------------
       ## PDFS of REPORTS  ------------------------------------------------
       ## ---------------------------------------------------------------------
-        fluidRow(   # AWARDEE INFORMATION
-          column(width = 12,
-                 h4("Reports"),
-                 actionButton("pdf", "Project Report"),
-                 actionButton("pdf", "Codebook")
+      fluidRow(   # PDF REPORTS
+        column(width = 12,
+               h4("Reports"),
+               actionButton("project_report", "Project Report"),
+               actionButton("codebook", "Codebook")
           ) # end of column
         ) # end of fluid row
       ) # end of main panel
@@ -398,13 +397,6 @@ server <- function(input, output, session) {
     pal <- colorNumeric(palette = brewer.pal(n = 9, name = "Reds"), 
                         na.color = "#808080", 
                         domain = select_df_agg$totaward)
-    
-    ## -------------------------------------
-    ## pdf absolute path
-    ## -------------------------------------
-    observeEvent(input$pdf, {
-      file.show(file.path(doc_dir, "TEST PDF FOR SHINY APP.pdf"))
-    })
 
     ## -------------------------------------
     ## leaflet map
@@ -460,6 +452,25 @@ server <- function(input, output, session) {
                  position = "topleft",
                  className = "map-title")
   })
+  
+  ## -------------------------------------
+  ## pdf reports
+  ## -------------------------------------
+  output$project_report <- downloadHandler(
+    filename = "TEST PDF FOR SHINY APP.pdf",
+    content = function(file) {
+      source_file <- "www/TEST PDF FOR SHINY APP.pdf"
+      file.copy(source_file, filename) 
+    }
+  )
+  
+  output$codebook <- downloadHandler(
+    filename = "TEST PDF FOR SHINY APP.pdf",
+    content = function(file) {
+      source_file <- "www/TEST PDF FOR SHINY APP.pdf"
+      file.copy(source_file, filename) 
+    }
+  )
   
   ## ---------------------------------------------------------------------------
   ## tables
