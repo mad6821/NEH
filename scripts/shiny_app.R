@@ -459,7 +459,7 @@ server <- function(input, output, session) {
   output$project_report <- downloadHandler(
     filename = "TEST PDF FOR SHINY APP.pdf",
     content = function(file) {
-      source_file <- "www/TEST PDF FOR SHINY APP.pdf"
+      source_file <- file.path(doc_dir, "TEST PDF FOR SHINY APP.pdf")
       file.copy(source_file, filename) 
     }
   )
@@ -467,7 +467,7 @@ server <- function(input, output, session) {
   output$codebook <- downloadHandler(
     filename = "TEST PDF FOR SHINY APP.pdf",
     content = function(file) {
-      source_file <- "www/TEST PDF FOR SHINY APP.pdf"
+      source_file <- file.path(doc_dir, "TEST PDF FOR SHINY APP.pdf")
       file.copy(source_file, filename) 
     }
   )
