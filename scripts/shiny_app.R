@@ -9,13 +9,14 @@
 
 ## libraries
 libs <- c("tidyverse", "readxl", "sf", "leaflet", 
-          "shiny", "crosswalkr", "RColorBrewer")
+          "shiny", "crosswalkr", "RColorBrewer", "kableExtra")
 sapply(libs, require, character.only = TRUE)
 
 ## paths (./scripts as working directory)
 args <- commandArgs(trailingOnly = TRUE)
 root <- ifelse(length(args) == 0, file.path(".."), args)
 dat_dir <- file.path(root, "data")
+doc_dir <- file.path(root, "docs")
 fig_dir <- file.path(root, "figures")
 scr_dir <- file.path(root, "scripts")
 tab_dir <- file.path(root, "tables")
@@ -173,7 +174,6 @@ ui <- fluidPage(
           helpText("Welcome to a comprehensive dashboard of NEH funding in the Appalachian region. 
                    To explore, please use the drop down menus below to select a state and year.")
         ),
-        
         # Centered inputs
         div(
           class = "centered-inputs",
@@ -205,11 +205,24 @@ ui <- fluidPage(
     column(width = 8, offset = 0, 
            div(style='margin-right:-10em;'),
       mainPanel(
-        ## main map (stays above)
+      ## ---------------------------------------------------------------------
+      ## MAIN COUNTIES MAP  ------------------------------------------------
+      ## ---------------------------------------------------------------------
         fluidRow(    # COUNTIES MAP
           column(width = 12, 
                  h4("Appalachian Regional Map"),
                  leafletOutput("countyMap1")
+          ) # end of column
+        ), # end of fluid row
+      
+      ## ---------------------------------------------------------------------
+      ## PDFS of REPORTS  ------------------------------------------------
+      ## ---------------------------------------------------------------------
+        fluidRow(   # AWARDEE INFORMATION
+          column(width = 12,
+                 h4("Reports"),
+                 actionButton("pdf", "Project Report"),
+                 actionButton("pdf", "Codebook")
           ) # end of column
         ) # end of fluid row
       ) # end of main panel
@@ -385,6 +398,13 @@ server <- function(input, output, session) {
     pal <- colorNumeric(palette = brewer.pal(n = 9, name = "Reds"), 
                         na.color = "#808080", 
                         domain = select_df_agg$totaward)
+    
+    ## -------------------------------------
+    ## pdf absolute path
+    ## -------------------------------------
+    observeEvent(input$pdf, {
+      file.show(file.path(doc_dir, "TEST PDF FOR SHINY APP.pdf"))
+    })
 
     ## -------------------------------------
     ## leaflet map
