@@ -21,6 +21,7 @@ doc_dir <- file.path(root, "docs")
 fig_dir <- file.path(root, "figures")
 scr_dir <- file.path(root, "scripts")
 tab_dir <- file.path(root, "tables")
+www_dir <- file.path(scr_dir, "www")
 
 ## -------------------------------------
 ## functions
@@ -230,8 +231,8 @@ ui <- fluidPage(
       fluidRow(   # PDF REPORTS
         column(width = 12,
                h4("Reports"),
-               actionButton("project_report", "Project Report"),
-               actionButton("codebook", "Codebook")
+               downloadButton("download_report", "Project Report"),
+               downloadButton("download_codebook", "Codebook")
           ) # end of column
         ) # end of fluid row
       ) # end of main panel
@@ -466,19 +467,22 @@ server <- function(input, output, session) {
   ## -------------------------------------
   ## pdf reports
   ## -------------------------------------
-  output$project_report <- downloadHandler(
-    filename = "TEST PDF FOR SHINY APP.pdf",
+  ## report_file <- file.path(www_dir, "test_pdf_for_shiny_app.pdf")
+  report_file <- "www/test_pdf_for_shiny_app.pdf"
+  output$download_report <- downloadHandler(
+    filename = function() { "test_pdf_for_shiny_app.pdf" },
+    contentType = "application/pdf",
     content = function(file) {
-      source_file <- file.path(doc_dir, "TEST PDF FOR SHINY APP.pdf")
-      file.copy(source_file, filename) 
+      file.copy(from = report_file, to = file)
     }
   )
-  
-  output$codebook <- downloadHandler(
-    filename = "TEST PDF FOR SHINY APP.pdf",
+
+  codebook_file <- "www/test_pdf_for_shiny_app.pdf"
+  output$download_codebook <- downloadHandler(
+    filename = function() { "test_pdf_for_shiny_app.pdf" },
+    contentType = "application/pdf",
     content = function(file) {
-      source_file <- file.path(doc_dir, "TEST PDF FOR SHINY APP.pdf")
-      file.copy(source_file, filename) 
+      file.copy(codebook_file, file)
     }
   )
   
