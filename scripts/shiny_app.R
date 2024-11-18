@@ -1,3 +1,4 @@
+
 ## -----------------------------------------------------------------------------
 ##
 ## [ PROJ ] Appalachian funding
@@ -78,6 +79,7 @@ df_agg_ct <- df |>
 df_agg_ct_yr <- df |>
   select(stname, county, fips, yearawarded, fips_yr_totaward,
          ends_with("_rate")) |>
+  group_by(stname, county, fips, yearawarded) |>
   distinct(fips_yr_totaward, .keep_all = TRUE) |>
   rename(totaward = fips_yr_totaward,
          state = stname)
@@ -359,7 +361,7 @@ server <- function(input, output, session) {
     if (input$year == "All") {
       select_df_agg <- select_df_agg |> filter(yearawarded == 0)
     } else {
-      select_df_agg <- select_df_agg |> filter(yearawarded == input$year)
+      select_df_agg <- select_df_agg |> filter(yearawarded == as.numeric(input$year))
       ## ----------------------
       ## message: no data
       ## ----------------------
