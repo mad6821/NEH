@@ -64,6 +64,25 @@ walk(yrs,
                                paste0("tl_", .x, "_us_county.zip")),
                      mode = "wb"))
 
+## also get latest county / state for shiny app map
+download.file(file.path(base_url,
+                        paste0("GENZ", yrs[length(yrs)]),
+                        "shp",
+                        paste0("cb_", yrs[length(yrs)], "_us_county_500k.zip")),
+              file.path(dat_dir,
+                        "tiger",
+                        paste0("cb_", yrs[length(yrs)], "_us_county_500k.zip")),
+              mode = "wb")
+
+download.file(file.path(base_url,
+                        paste0("GENZ", yrs[length(yrs)]),
+                        "shp",
+                        paste0("cb_", yrs[length(yrs)], "_us_state_500k.zip")),
+              file.path(dat_dir,
+                        "tiger",
+                        paste0("cb_", yrs[length(yrs)], "_us_state_500k.zip")),
+              mode = "wb")
+
 ## -----------------------------------------------------------------------------
 ## gazetteer for zcta and counties
 ## -----------------------------------------------------------------------------

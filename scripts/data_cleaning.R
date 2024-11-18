@@ -23,12 +23,7 @@ tab_dir <- file.path(root, "tables")
 ## functions
 ## -------------------------------------
 
-## to read shapefiles from zip file
-st_read_zip <- function(zfile) {
-  tmp <- tempfile()
-  unzip(zfile, exdir = tmp)
-  st_read(dsn = tmp)
-}
+source(file.path(scr_dir, "utils.R"))
 
 ## -------------------------------------
 ## macros

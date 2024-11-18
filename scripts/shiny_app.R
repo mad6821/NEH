@@ -22,6 +22,12 @@ scr_dir <- file.path(root, "scripts")
 tab_dir <- file.path(root, "tables")
 
 ## -------------------------------------
+## functions
+## -------------------------------------
+
+source(file.path(scr_dir, "utils.R"))
+
+## -------------------------------------
 ## set CRS
 ## -------------------------------------
 
@@ -83,14 +89,15 @@ df_agg <- bind_rows(df_agg_ct, df_agg_ct_yr)
 ## -----------------------------------------------------------------------------
 
 ## all counties in appalachia states, with indicator for appalachian counties
-map_ct <- st_as_sf(maps::map("county", plot = FALSE, fill = TRUE)) |>
+map_ct <- st_read_zip(file.path(dat_dir, "tiger", "cb_2023_us_county_500k.zip")) |>
   rename_all(tolower) |>
-  left_join(maps::county.fips |>
-              mutate(fips = sprintf("%05d", fips)),
-            by = c("id" = "polyname")) |>
-  separate(id, c("state", "county"), sep = ",") |>
-  mutate(county = str_to_title(county),
-         state = str_to_title(state)) |>
+  rename(fips = geoid,
+         stfips = statefp,
+         county = name) |>
+  mutate(stfips = as.integer(stfips)) |>
+  select(stfips, fips, county, geometry) |>
+  left_join(crosswalkr::stcrosswalk |> select(stfips, state = stname),
+            by = "stfips") |>
   filter(state %in% pull(app_st, state)) |>
   left_join(df_arc |>
               mutate(appalachia = 1) |>
@@ -100,12 +107,13 @@ map_ct <- st_as_sf(maps::map("county", plot = FALSE, fill = TRUE)) |>
   st_transform(crs = map_crs)
 
 ## states
-map_st <- st_as_sf(maps::map("state", fill = TRUE, plot = FALSE)) |>
+map_st <- st_read_zip(file.path(dat_dir, "tiger", "cb_2023_us_state_500k.zip")) |>
   rename_all(tolower) |>
-  filter(id %in% pull(distinct(df_arc, state = tolower(state), state))) |>
-  mutate(state = str_to_title(id)) |>
-  select(-id) |>
-  remove_rownames() |>
+  rename(state = name,
+         stfips = statefp) |>
+  filter(tolower(state) %in% pull(distinct(df_arc, state = tolower(state),
+                                           state))) |>
+  select(stfips, state, geometry) |>
   st_transform(crs = map_crs)
 
 ## -----------------------------------------------------------------------------
