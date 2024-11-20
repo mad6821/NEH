@@ -196,19 +196,13 @@ df_grant <- df_grant |>
 ## -----------------------------------------------------------------------------
 
 ## grant data files (use regular expression to pull only right ones
-files <- list.files(file.path(dat_dir, "bls"), full.names = TRUE)
+bls_file <- list.files(file.path(dat_dir, "bls"), full.names = TRUE)
 
 ## map read all files
-df_bls <- map(files,
-              ~ read_csv(.x, show_col_types = FALSE) |>
-                rename_all(tolower) |>
-                filter(stfips %in% cw_st_app[["stfips"]]) |>
-                mutate(fips = paste0(stfips, ctfips)) |>
-                mutate(year = year |> as.integer(),
-                       unemp_rate = unemployed_rate |> as.numeric()) |>
-                select(fips, year, unemp_rate)
-              ) |>
-  bind_rows() |>
+df_bls <- read_csv(bls_file, show_col_types = FALSE) |>
+  mutate(stfips = str_sub(fips, 1, 2)) |>
+  filter(stfips %in% cw_st_app[["stfips"]]) |>
+  select(stfips, everything()) |>
   arrange(fips, year)
 
 ## -----------------------------------------------------------------------------

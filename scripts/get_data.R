@@ -8,7 +8,7 @@
 ## -----------------------------------------------------------------------------
 
 ## libraries
-libs <- c("tidyverse")
+libs <- c("tidyverse", "curl")
 sapply(libs, require, character.only = TRUE)
 
 ## paths
@@ -123,33 +123,31 @@ walk(yrs,
 ## unemployment data
 ## -----------------------------------------------------------------------------
 
+## using BLS FTP
+## period := M13 (annual average)
+## measure := 3 (unemployment rate)
+## series := LAUCN (county) + FIPS (01001)
+
 ## make directory if it doesn't exist
 dir.create(file.path(dat_dir, "bls"), showWarnings = FALSE)
 
 ## base url
-base_url <- "https://www.bls.gov/lau"
+base_url <- "https://download.bls.gov/pub/time.series/la/la.data.64.County"
 
-## have to read b/c BLS won't allow direct downloads
-out <- map(yrs,
-           ~ read_fwf(file.path(base_url,
-                                paste0("laucnty", substr(.x, 3, 4), ".txt")),
-                      fwf_cols(lauc = c(1,15),
-                               stfips = c(19,20),
-                               ctfips = c(26,28),
-                               name = c(32,81),
-                               year = c(82,85),
-                               labor = c(86,99),
-                               employed = c(100,112),
-                               unemployed_level = c(113,123),
-                               unemployed_rate = c(124,132)),
-                      skip = 6) |>
-             filter(!is.na(stfips))) |>
-  set_names(paste0("bls_lauc_", yrs))
+## download and clean
+con <- curl(base_url, "rb")
+out <- read_delim(con, delim = "\t",
+                  col_names = c("series_id", "year", "period", "value", "footnote_codes"),
+                  skip = 1,
+                  trim_ws = TRUE) |>
+  mutate(fips = str_sub(series_id, 6, 10),
+         measure = str_sub(series_id, start = -1) |> as.integer()) |>
+  filter(period == "M13", year %in% yrs, measure == 3) |>
+  select(fips, year, unemp_rate = value)
+close(con)
 
 ## writing to disk
-walk2(out,
-      names(out),
-      ~ write_csv(.x, file.path(dat_dir, "bls", paste0(.y, ".csv"))))
+write_csv(out, file.path(dat_dir, "bls", "bls_lauc.csv"))
 
 ## -----------------------------------------------------------------------------
 ## poverty data
