@@ -135,8 +135,9 @@ dir.create(file.path(dat_dir, "bls"), showWarnings = FALSE)
 base_url <- "https://download.bls.gov/pub/time.series/la/la.data.64.County"
 
 ## download and clean
-con <- curl(base_url, "rb")
-out <- read_delim(con, delim = "\t",
+## con <- curl(base_url, "rb")
+
+out <- read_delim(file.path(dat_dir, "bls/la.data.64.County"), delim = "\t",
                   col_names = c("series_id", "year", "period", "value", "footnote_codes"),
                   skip = 1,
                   trim_ws = TRUE) |>

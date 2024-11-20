@@ -1,0 +1,13 @@
+name: NEHFundinginAppalachia
+title: NEHFundinginAppalachia
+username: snkdbz-maya-dalton
+account: snkdbz-maya-dalton
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 12416437
+bundleId: 9392950
+url: https://snkdbz-maya-dalton.shinyapps.io/NEHFundinginAppalachia/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: data_cleaning.R|data_visualization.R|get_data.R|README.md

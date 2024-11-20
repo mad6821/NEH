@@ -9,18 +9,23 @@
 ## -----------------------------------------------------------------------------
 
 ## libraries
-libs <- c("tidyverse", "readxl", "sf", "leaflet", 
-          "shiny", "crosswalkr", "RColorBrewer", "kableExtra")
-sapply(libs, require, character.only = TRUE)
+library(tidyverse)
+library(readxl)
+library(sf)
+library(leaflet)
+library(shiny)
+library(crosswalkr)
+library(RColorBrewer)
+library(kableExtra)
+## libs <- c("tidyverse", "readxl", "sf", "leaflet", "shiny", "crosswalkr", "RColorBrewer", "kableExtra")
+## sapply(libs, require, character.only = TRUE)
 
 ## paths (./scripts as working directory)
-args <- commandArgs(trailingOnly = TRUE)
-root <- ifelse(length(args) == 0, file.path(".."), args)
-dat_dir <- file.path(root, "data")
-doc_dir <- file.path(root, "docs")
-fig_dir <- file.path(root, "figures")
-scr_dir <- file.path(root, "scripts")
-tab_dir <- file.path(root, "tables")
+## args <- commandArgs(trailingOnly = TRUE)
+## root <- ifelse(length(args) == 0, file.path(".."), args)
+root<- "."
+scr_dir <- file.path(root)
+dat_dir <- file.path(root, "data_server")
 www_dir <- file.path(scr_dir, "www")
 
 ## -------------------------------------

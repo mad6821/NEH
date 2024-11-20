@@ -196,7 +196,7 @@ df_grant <- df_grant |>
 ## -----------------------------------------------------------------------------
 
 ## grant data files (use regular expression to pull only right ones
-bls_file <- list.files(file.path(dat_dir, "bls"), full.names = TRUE)
+bls_file <- file.path(dat_dir, "bls/bls_lauc.csv")
 
 ## map read all files
 df_bls <- read_csv(bls_file, show_col_types = FALSE) |>
