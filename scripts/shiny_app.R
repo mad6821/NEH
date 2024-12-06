@@ -101,7 +101,7 @@ map_ct <- st_read_zip(file.path(dat_dir, "tiger", "cb_2023_us_county_500k.zip"))
   rename_all(tolower) |>
   rename(fips = geoid,
          stfips = statefp,
-         county = name) |>
+         county = namelsad) |>
   mutate(stfips = as.integer(stfips)) |>
   select(stfips, fips, county, geometry) |>
   left_join(crosswalkr::stcrosswalk |> select(stfips, state = stname),
