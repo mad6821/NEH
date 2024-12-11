@@ -473,18 +473,18 @@ server <- function(input, output, session) {
   ## pdf reports
   ## -------------------------------------
   ## report_file <- file.path(www_dir, "test_pdf_for_shiny_app.pdf")
-  report_file <- "www/test_pdf_for_shiny_app.pdf"
+  report_file <- "www/Health of the Humanities in Appalachia v.2.pdf"
   output$download_report <- downloadHandler(
-    filename = function() { "test_pdf_for_shiny_app.pdf" },
+    filename = function() { "Health of the Humanities in Appalachia v.2.pdf" },
     contentType = "application/pdf",
     content = function(file) {
       file.copy(from = report_file, to = file)
     }
   )
 
-  codebook_file <- "www/test_pdf_for_shiny_app.pdf"
+  codebook_file <- "www/Humanities in Appalachia Codebook.pdf"
   output$download_codebook <- downloadHandler(
-    filename = function() { "test_pdf_for_shiny_app.pdf" },
+    filename = function() { "Humanities in Appalachia Codebook.pdf" },
     contentType = "application/pdf",
     content = function(file) {
       file.copy(codebook_file, file)
