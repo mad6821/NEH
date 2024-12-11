@@ -5,7 +5,7 @@ account: snkdbz-maya-dalton
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 12416437
-bundleId: 9474892
+bundleId: 9503762
 url: https://snkdbz-maya-dalton.shinyapps.io/NEHFundinginAppalachia/
 version: 1
 asMultiple: FALSE
