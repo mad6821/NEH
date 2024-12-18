@@ -191,7 +191,7 @@ ui <- fluidPage(
                    br(),
                    "To explore, please use the drop down menus below to select a state and year.",
                    br(),
-                   HTML("<i>By Maya Dalton, 2024 intern in the Office of Data and Evaluation*<i>"))
+                   HTML("<i>By Maya Dalton, 2024 intern in the Office of Data and Evaluation*</i>"))
         ),
         # Centered inputs
         div(
@@ -249,7 +249,7 @@ ui <- fluidPage(
       fluidRow(   # DISCLAIMER
         column(width = 12,
                  helpText("*All views and errors within this report are the author's own 
-                          and do not necessarily reflect the views of the NEH.")
+                          and do not necessarily reflect the views of NEH.")
           ) # end of column
         ) # end of fluid row
       ) # end of main panel
